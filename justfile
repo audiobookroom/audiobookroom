@@ -1,8 +1,12 @@
 set windows-shell := ["nu" , "-c"]
+
+
 up:
     sea-orm-cli migrate up
 fresh:
     sea-orm-cli migrate fresh
+serve:
+    cargo leptos serve --release
 deploy_db target_addr:
     rsync -au --progress ./audiobookroom.db {{target_addr}}:~/
 generate:
