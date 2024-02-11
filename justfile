@@ -4,6 +4,7 @@ set windows-shell := ["nu" , "-c"]
 up:
     sea-orm-cli migrate up
 fresh:
+    touch audiobookroom.db
     sea-orm-cli migrate fresh
 serve:
     cargo leptos serve --release
