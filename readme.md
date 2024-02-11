@@ -40,3 +40,11 @@ this is a simple hobby project built with leptos + axum + sea-orm + tailwind. It
   ![player](/markdown/player.png)
 - addbook
   ![addbook](/markdown/addbook.png)
+
+
+## todo
+- there are a lot of things unfinished...
+- manage current user
+- implement profiles for authors and books.
+- prettify the UI
+- ...
