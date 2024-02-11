@@ -1,3 +1,4 @@
+[![](https://dcbadge.vercel.app/api/server/Rh7VgCtmFN)](https://discord.gg/Rh7VgCtmFN)
 # A simple and **_fast_** Self-host Audiobook server and player written fully in rust
 
 this is a simple hobby project built with leptos + axum + sea-orm + tailwind. It's simple but fast
