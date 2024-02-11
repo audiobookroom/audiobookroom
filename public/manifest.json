@@ -1,0 +1,14 @@
+{
+    "name": "Aduiobookroom",
+    "icons": [
+      {
+        "src": "/icon.png",
+        "type": "image/png",
+        "sizes": "512x512"
+      }
+    ],
+    "start_url": "https://booksjq.thesjq.com",
+    "display": "standalone"
+
+  }
+  

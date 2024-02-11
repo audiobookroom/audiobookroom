@@ -1,0 +1,69 @@
+* {
+  font-family: -apple-system, "Helvetica Neue", Helvetica, "Nimbus Sans L",
+    Arial, "Liberation Sans", "PingFang SC", "Hiragino Sans GB",
+    "Source Han Sans CN", "Source Han Sans SC", "Microsoft YaHei",
+    "Wenquanyi Micro Hei", "WenQuanYi Zen Hei", "ST Heiti", SimHei,
+    "WenQuanYi Zen Hei Sharp", sans-serif;
+}
+
+body {
+  height: 100vh;
+  margin: 0px;
+  padding: 0px;
+  overflow: hidden;
+}
+body * {
+  padding: 2px;
+  border: 1px chocolate;
+  border-radius: 5px;
+}
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin: 0;
+}
+.container_row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 0;
+}
+.container_row > * {
+  flex: 1;
+  margin: 2px;
+}
+.top {
+  height: 80px;
+  background-color: bisque;
+  margin: 0;
+}
+.middle {
+  flex: 1;
+  overflow: auto;
+  margin: 0;
+  background-color: chocolate;
+}
+.bottom {
+  height: 200px;
+  background-color: bisque;
+}
+.tight_list {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.tight_list > * {
+  margin: 1px;
+  padding: 1px;
+  border: 1px ivory;
+  border-radius: 5px;
+}
+
+.test-big {
+  height: 1000px;
+  background-color: red;
+}

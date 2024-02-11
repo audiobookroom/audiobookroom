@@ -1,0 +1,28 @@
+{
+  //   "rust-analyzer.cargo.features": ["hydrate"],
+  //   "rust-analyzer.cargo.noDefaultFeatures": true,
+  "customLocalFormatters.formatters": [
+    {
+      "languages": ["rust"],
+      "command": "leptosfmt -s|rustfmt --edition 2021"
+    }
+  ],
+  "rust-analyzer.showUnlinkedFileNotification": false,
+  "emmet.includeLanguages": {
+    "rust": "html",
+    "*.rs": "html"
+  },
+  "tailwindCSS.includeLanguages": {
+    "rust": "html",
+    "*.rs": "html"
+  },
+  "files.associations": {
+    "*.rs": "rust"
+  },
+  "editor.quickSuggestions": {
+    "other": "on",
+    "comments": "on",
+    "strings": true
+  },
+  "css.validate": false
+}

@@ -1,0 +1,6 @@
+/target
+*.mp3
+test_book
+fetchbook
+*.db
+node_modules
