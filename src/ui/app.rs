@@ -137,7 +137,7 @@ fn LoginPage(
                                     match have_user {
                                         Ok(have_user) => {
                                             if have_user {
-                                                view! { <span>Logn in your account</span> }
+                                                view! { <span>Login your account</span> }
                                             } else {
                                                 view! { <span>Create a new account</span> }
                                             }
