@@ -5,7 +5,7 @@ this is a simple hobby project built with leptos + axum + sea-orm + tailwind. It
 ## compare to [AudiobookShelf](https://github.com/advplyr/audiobookshelf)
 
 - very **_fast_** (that the reason I decide to write this for my own use): the AudiobookShelf would take 1-3s to change the page. while in audiobookroom. every operation are finished in **_10ms_**.
-- very pool functionality: This is just an audio server and audio player, nothing else (like metadata fetch. Audio analysis)
+- very poor functionality: This is just an audio server and audio player, nothing else (like metadata fetch. Audio analysis)
 
 ## features
 
