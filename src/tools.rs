@@ -166,5 +166,20 @@ pub async fn create_new_book(
     // insert the chapters
     Ok(())
 }
+
+pub async fn create_new_user(username: String, password: String, db: &sea_orm::DatabaseConnection) {
+    pub use bcrypt::{hash, DEFAULT_COST};
+    use sea_orm::prelude::*;
+
+    let password_hashed = hash(password, DEFAULT_COST).unwrap();
+
+    let user = account::ActiveModel {
+        name: sea_orm::ActiveValue::Set(username),
+        password: sea_orm::ActiveValue::Set(password_hashed),
+        role_level: sea_orm::ActiveValue::Set(1),
+        ..Default::default()
+    };
+    let _user = user.insert(db).await.unwrap();
+}
 #[cfg(test)]
 mod tests {}
