@@ -203,7 +203,6 @@ fn BookDetail(
             }
         },
     );
-    let global_current_progress = use_context::<RwSignal<Option<ProgressResult>>>().unwrap();
 
     view! {
         <div class="flex flex-col items-center text-center w-full ">
@@ -227,52 +226,28 @@ fn BookDetail(
                                             <button
                                                 class="w-full mx-2 px-2 py-1 bg-blue-50 hover:bg-green-50 border border-solid rounded-sm shadow-md hover:shadow-lg"
                                                 on:click=move |_e| {
-                                                    if let Some(global_progress) = global_current_progress.get()
-                                                        && global_progress.music_id == progress_item.music_id
-                                                    {
-                                                        set_player_props(
-                                                            Some(crate::ui::player::AudioProps {
-                                                                book_id,
-                                                                chapter_id: global_progress.chapter_id,
-                                                                init_time: global_progress.progress,
-                                                                total_chapters: book.chapters,
-                                                            }),
-                                                        );
-                                                    } else {
-                                                        set_player_props(
-                                                            Some(crate::ui::player::AudioProps {
-                                                                book_id,
-                                                                chapter_id,
-                                                                init_time,
-                                                                total_chapters: book.chapters,
-                                                            }),
-                                                        );
-                                                    }
+                                                    set_player_props(
+                                                        Some(crate::ui::player::AudioProps {
+                                                            book_id,
+                                                            chapter_id,
+                                                            init_time,
+                                                            total_chapters: book.chapters,
+                                                        }),
+                                                    );
                                                 }
                                             >
 
                                                 <h2>{&book.name}</h2>
 
                                                 {move || {
-                                                    if let Some(global_progress) = global_current_progress.get()
-                                                        && global_progress.music_id == progress_item.music_id
-                                                    {
-                                                        view! {
-                                                            <p>
-                                                                {format!("Current progress: {}", global_progress.progress)}
-                                                            </p>
-                                                        }
-                                                            .into_view()
-                                                    } else {
-                                                        view! {
-                                                            <h3>{&chapter.chapter_name}</h3>
+                                                    view! {
+                                                        <h3>{&chapter.chapter_name}</h3>
 
-                                                            <p>
-                                                                {format!("Current progress: {}", progress_item.progress)}
-                                                            </p>
-                                                        }
-                                                            .into_view()
+                                                        <p>
+                                                            {format!("Current progress: {}", progress_item.progress)}
+                                                        </p>
                                                     }
+                                                        .into_view()
                                                 }}
 
                                             </button>

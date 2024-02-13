@@ -4,7 +4,7 @@ use leptos_router::ActionForm;
 use crate::{
     server_api::{
         auth::{Logout, User},
-        progress::{ProgressResult, SetProgress},
+        progress::SetProgress,
     },
     ui::{
         main_authors::MainAuthors,
@@ -93,8 +93,6 @@ pub fn MainPage(user: User, logout: super::ServerAction<Logout, ()>) -> impl Int
     provide_context(set_player_props);
     // set current user
     provide_context(user.clone());
-    let global_progress_signal = create_rw_signal(Option::<ProgressResult>::None);
-    provide_context(global_progress_signal);
 
     view! {
         <div class="flex flex-col justify-between items-stretch h-full max-h-full p-2 lg:p-4  mx-auto overflow-hidden max-w-lg ">
