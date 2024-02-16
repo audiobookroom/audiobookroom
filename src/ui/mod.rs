@@ -16,3 +16,6 @@ pub fn translate_time(time: i64) -> (u32, u32) {
     (min as u32, sec as u32)
 }
 
+pub fn formate_time(min:u32,sec:u32)->String{
+    format!("{:02}:{:02}",min,sec)
+}

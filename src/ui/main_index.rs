@@ -66,7 +66,7 @@ pub fn MainIndex() -> impl IntoView {
                                                     {move || {
                                                         view! {
                                                             <h3>{&chapter_name}</h3>
-                                                            <p>{format!("Current progress: {}:{}", min,sec)}</p>
+                                                            <p>{format!("Current progress: {}", super::formate_time(min, sec))}</p>
                                                         }
                                                             .into_view()
                                                     }}

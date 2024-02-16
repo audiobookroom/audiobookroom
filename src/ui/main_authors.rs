@@ -64,13 +64,14 @@ fn AuthorIndex(
                                 Ok(authors) => {
                                     let number_of_pages = authors.number_of_pages;
                                     view! {
-                                        <div class="flex flex-row justify-evenly  items-center  space-x-1 w-full flex-wrap">
 
                                             {if !authors.items.is_empty() {
                                                 view! { <h1>{"authors:"}</h1> }
                                             } else {
                                                 view! { <h1>{"No authors"}</h1> }
                                             }}
+                                        <div class="flex flex-row justify-between  items-center  space-x-1 w-full flex-wrap">
+
                                             {authors
                                                 .items
                                                 .into_iter()
@@ -78,7 +79,7 @@ fn AuthorIndex(
                                                     let author_to_send = author.clone();
                                                     view! {
                                                         <button
-                                                            class=" my-1 p-1 bg-blue-50 shadow-sm hover:shadow-lg hover:bg-green-50"
+                                                            class=" my-1 p-1 bg-blue-50 shadow-sm flex-auto hover:shadow-lg hover:bg-green-50"
                                                             on:click=move |_| {
                                                                 set_current_content(
                                                                     AuthorPageContent::AuthorDetail(author_to_send.clone()),

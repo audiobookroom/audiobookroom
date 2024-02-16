@@ -61,13 +61,15 @@ fn BookIndex(#[prop(into)] set_current_content: Callback<BookPageContent, ()>) -
                                 Ok(books) => {
                                     let number_of_pages = books.number_of_pages;
                                     view! {
-                                        <div class="flex flex-row justify-evenly  items-center  space-y-1 space-x-1 flex-wrap w-full">
+                                        
 
                                             {if !books.items.is_empty() {
                                                 view! { <h1>{"Books:"}</h1> }
                                             } else {
                                                 view! { <h1>{"No books"}</h1> }
                                             }}
+                                            
+                                            <div class="flex flex-row justify-between  items-center  space-y-1 space-x-1 flex-wrap w-full">
                                             {books
                                                 .items
                                                 .into_iter()
@@ -76,7 +78,7 @@ fn BookIndex(#[prop(into)] set_current_content: Callback<BookPageContent, ()>) -
                                                     let author_to_send = author.clone();
                                                     view! {
                                                         <button
-                                                            class="p-1  bg-blue-50 shadow-sm hover:shadow-lg hover:bg-green-50"
+                                                            class="p-1  bg-blue-50 shadow-sm flex-auto hover:shadow-lg hover:bg-green-50"
                                                             on:click=move |_| {
                                                                 set_current_content(
                                                                     BookPageContent::BookDetail((
@@ -250,11 +252,13 @@ fn BookDetail(
                                                 <h2>{&book.name}</h2>
 
                                                 {move || {
+                                                    let (min, sec) = crate::ui::translate_time(init_time as i64);
+                                                    let formated_time = crate::ui::formate_time(min, sec);
                                                     view! {
                                                         <h3>{&chapter.chapter_name}</h3>
 
                                                         <p>
-                                                            {format!("Current progress: {}", progress_item.progress)}
+                                                            {format!("Current progress: {}", formated_time)}
                                                         </p>
                                                     }
                                                         .into_view()
