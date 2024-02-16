@@ -7,6 +7,7 @@ pub enum SettingsContent {
     Main,
     AddBook,
     DeleteBook,
+    DeleteBookDetail(i32),
     AddUser,
     DeleteUser,
 }
@@ -57,9 +58,15 @@ pub fn MainSettings() -> impl IntoView {
                         .into_view()
                 }
                 SettingsContent::AddBook => view! { <AddBook/> }.into_view(),
-                SettingsContent::DeleteBook => view! { <DeleteBook/> }.into_view(),
+                SettingsContent::DeleteBook => {
+                    view! { <DeleteBook set_content=set_current_content/> }.into_view()
+                }
                 SettingsContent::AddUser => view! { <AddUser/> }.into_view(),
                 SettingsContent::DeleteUser => view! { <DeleteUser/> }.into_view(),
+                SettingsContent::DeleteBookDetail(id) => {
+                    view! { <DeleteBookDetail book_id=id set_content=set_current_content/> }
+                        .into_view()
+                }
             }
         }}
     }
@@ -151,14 +158,13 @@ pub fn AddBook() -> impl IntoView {
 }
 
 #[component]
-pub fn DeleteBook() -> impl IntoView {
+pub fn DeleteBook(set_content:WriteSignal<SettingsContent>) -> impl IntoView {
     let (page, set_page) = create_signal(0);
     let (max_page, _set_max_page) = create_signal(100);
-    let delete_book = create_server_action::<crate::server_api::book::DeleteBook>();
     let all_books = create_resource(
-        move || (page.get(), max_page.get(), delete_book.version().get()),
-        |(page, max_page, _)| async move {
-            let books = crate::server_api::book::get_books(page, max_page).await;
+        move || (page.get(), max_page.get()),
+        |(page, max_page)| async move {
+            let books = crate::server_api::book::get_books_details(page, max_page).await;
             books
         },
     );
@@ -182,17 +188,17 @@ pub fn DeleteBook() -> impl IntoView {
                                     {books
                                         .items
                                         .into_iter()
-                                        .map(|book| {
+                                        .map(|(book, author)| {
                                             view! {
                                                 <button
                                                     class="w-full text-center bg-blue-50 hover:bg-green-50 px-1 py-1 my-2 border border-solid rounded-full"
                                                     on:click=move |_e| {
-                                                        delete_book.dispatch(book.id.into());
+                                                        set_content(SettingsContent::DeleteBookDetail(book.id));
                                                     }
                                                 >
 
-                                                    {&book.name}
-
+                                                    <h1>{&book.name}</h1>
+                                                    <h2>{&author.name}</h2>
                                                 </button>
                                             }
                                         })
@@ -265,6 +271,71 @@ pub fn DeleteBook() -> impl IntoView {
             }}
 
         </Transition>
+    }
+}
+
+#[component]
+pub fn DeleteBookDetail(book_id:i32,set_content:WriteSignal<SettingsContent>)->impl IntoView{
+    let delete_book = create_server_action::<crate::server_api::book::DeleteBook>();
+
+    let book_detail = create_resource(
+        move || {
+            delete_book.version().get()
+        },
+        move |_| async move {
+            let book = crate::server_api::book::get_book_detail(book_id).await;
+            if let Ok(book)=book{
+                let author = crate::server_api::authors::get_author_by_id(book.author_id).await;
+                if let Ok(Some(author))=author{
+                    return Some((book,author));
+                }
+            }
+            None
+        },
+    );
+
+    view! {
+        <Transition fallback=move || {
+            view! { <span>"Loading..."</span> }
+        }>
+            {move || {
+                book_detail
+                    .get()
+                    .map(|book_author| {
+                        if let Some((book, author)) = book_author {
+                            view! {
+                                <div class="flex flex-col items-center w-full">
+                                    <h1>{"Book Detail"}</h1>
+                                    <h2>{format!("Book Name: {}", book.name)}</h2>
+                                    <h2>{format!("Author Name: {}", author.name)}</h2>
+                                    <button
+                                        class="w-full text-center bg-blue-50 hover:bg-green-50 px-1 py-1 my-2 border border-solid rounded-full"
+                                        on:click=move |_| {
+                                            delete_book.dispatch(book.id.into());
+                                        }
+                                    >
+
+                                        {"Delete"}
+                                    </button>
+                                </div>
+                            }
+                                .into_view()
+                        } else {
+                            view! { <span>"(deleted)Book not found"</span> }.into_view()
+                        }
+                    })
+            }}
+
+        </Transition>
+        <div class="w-full">
+            <button
+
+                class="w-full text-center bg-blue-50 hover:bg-green-50 px-1 py-1 my-2 border border-solid rounded-full"
+                on:click=move |_| { set_content(SettingsContent::DeleteBook) }
+            >
+                {"Back"}
+            </button>
+        </div>
     }
 }
 
