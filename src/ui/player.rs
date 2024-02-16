@@ -21,7 +21,18 @@ pub fn Player(
     let props = create_memo(move |_| props.get());
     let player_ref_node: NodeRef<Audio> = create_node_ref();
     let (last_saved_time, set_last_saved_time) = create_signal(None::<SetProgress>);
-    let (current_time, set_current_time) = create_signal(0.0);
+    let (_current_time, set_current_time) = create_signal(0.0);
+
+    // update every 4 sec
+    let current_time_1 = create_memo(move |_| {
+        let current_time = _current_time.get() as u32;
+        current_time
+    });
+    let current_time_4 = create_memo(move |_| {
+        let current_time = _current_time.get() as u32;
+        let current_time = current_time - current_time % 4;
+        current_time
+    });
     let (total_time, set_total_time) = create_signal(0.0);
     let user = use_context::<User>().unwrap();
     let set_progress_action =
@@ -245,12 +256,8 @@ pub fn Player(
                                                         <div class="flex justify-between text-sm text-grey-darker">
                                                             <p>
                                                                 {move || {
-                                                                    let current_time = current_time.get();
-                                                                    format!(
-                                                                        "{:02}:{:02}",
-                                                                        current_time as i32 / 60,
-                                                                        current_time as i32 % 60,
-                                                                    )
+                                                                    let current_time = current_time_1.get();
+                                                                    format!("{:02}:{:02}", current_time / 60, current_time % 60)
                                                                 }}
 
                                                             </p>
@@ -277,7 +284,7 @@ pub fn Player(
                                                                     style:width=move || {
                                                                         format!(
                                                                             "{}%",
-                                                                            current_time.get() / total_time.get() * 100.0,
+                                                                            current_time_4.get() as f64 / total_time.get() * 100.0,
                                                                         )
                                                                     }
                                                                 >
@@ -287,7 +294,7 @@ pub fn Player(
                                                                     style:left=move || {
                                                                         format!(
                                                                             "{}%",
-                                                                            current_time.get() / total_time.get() * 100.0,
+                                                                            current_time_4.get() as f64 / total_time.get() * 100.0,
                                                                         )
                                                                     }
                                                                 >
