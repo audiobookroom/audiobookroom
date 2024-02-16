@@ -11,9 +11,14 @@ pub fn MainIndex() -> impl IntoView {
     let current_progress = create_resource(
         move || {},
         move |_| async move {
-            let current_p = crate::server_api::progress::get_progress_detail_by_user(user.id)
+            let mut current_p = crate::server_api::progress::get_progress_detail_by_user(user.id)
                 .await
                 .unwrap();
+            current_p.sort_unstable_by(|a, b| {
+                let a_update = chrono::DateTime::parse_from_rfc3339(&a.0.update).unwrap();
+                let b_update = chrono::DateTime::parse_from_rfc3339(&b.0.update).unwrap();
+                b_update.cmp(&a_update)
+            });
             current_p
         },
     );
@@ -54,6 +59,10 @@ pub fn MainIndex() -> impl IntoView {
                                             let init_time = progress_item.progress;
                                             let chapter_name = chapter.chapter_name.clone();
                                             let (min, sec) = super::translate_time(init_time as i64);
+                                            let last_update = chrono::DateTime::parse_from_rfc3339(&progress_item.update)
+                                                .unwrap();
+                                            let local_update = last_update.with_timezone(&chrono::Local);
+                                            let local_str = local_update.format("%Y-%m-%d %H:%M:%S").to_string();
                                             view! {
                                                 <button
                                                     class="w-full mx-2 px-2 py-1 bg-blue-50 hover:bg-green-50 border border-solid rounded-sm shadow-md hover:shadow-lg"
@@ -70,6 +79,12 @@ pub fn MainIndex() -> impl IntoView {
                                                                 {format!(
                                                                     "Current progress: {}",
                                                                     super::formate_time(min, sec),
+                                                                )}
+                                                            </p>
+                                                            <p>
+                                                                {format!(
+                                                                    "Last update: {}",
+                                                                    local_str
                                                                 )}
                                                             </p>
                                                         }

@@ -22,13 +22,13 @@ pub fn MainSettings() -> impl IntoView {
                         <div class="flex flex-col items-center w-full">
                             <h1>{"Settings"}</h1>
                             <button
-                                class="w-full text-center bg-green-50 hover:bg-blue-50 px-1 py-1 my-2 border border-solid rounded-full"
+                                class="w-full text-center bg-blue-50 hover:bg-green-50 px-1 py-1 my-2 border border-solid rounded-full"
                                 on:click=move |_| { set_current_content(SettingsContent::AddBook) }
                             >
                                 {"Add Book"}
                             </button>
                             <button
-                                class="w-full text-center bg-green-50 hover:bg-blue-50 px-1 py-1 my-2 border border-solid rounded-full"
+                                class="w-full text-center bg-blue-50 hover:bg-green-50 px-1 py-1 my-2 border border-solid rounded-full"
                                 on:click=move |_| {
                                     set_current_content(SettingsContent::DeleteBook)
                                 }
@@ -37,13 +37,13 @@ pub fn MainSettings() -> impl IntoView {
                                 {"Delete Book"}
                             </button>
                             <button
-                                class="w-full text-center bg-green-50 hover:bg-blue-50 px-1 py-1 my-2 border border-solid rounded-full"
+                                class="w-full text-center bg-blue-50 hover:bg-green-50 px-1 py-1 my-2 border border-solid rounded-full"
                                 on:click=move |_| { set_current_content(SettingsContent::AddUser) }
                             >
                                 {"Add User"}
                             </button>
                             <button
-                                class="w-full text-center bg-green-50 hover:bg-blue-50 px-1 py-1 my-2 border border-solid rounded-full"
+                                class="w-full text-center bg-blue-50 hover:bg-green-50 px-1 py-1 my-2 border border-solid rounded-full"
                                 on:click=move |_| {
                                     set_current_content(SettingsContent::DeleteUser)
                                 }
@@ -151,9 +151,35 @@ pub fn AddBook() -> impl IntoView {
 
 #[component]
 pub fn DeleteBook() -> impl IntoView {
+    let (page, set_page) = create_signal(0);
+    let (max_page, set_max_page) = create_signal(100);
+    let all_books = create_resource(
+        move || (page.get(), max_page.get()),
+        |(page, max_page)| async move {
+            let books = crate::server_api::book::get_books(page, max_page).await;
+            books
+        },
+    );
     view! {
-        <h2>{"Delete Book"}</h2>
-        <h2>{"TODO unimplemented yet"}</h2>
+    <h2>{"Delete Book"}</h2>
+    <Transition fallback=move || {
+        view! { <span>"Loading..."</span> }
+    }>
+        {move || {
+            all_books
+                .get()
+                .map(|books| {
+                    let books=books.unwrap();
+                    view! {
+                        <div class="flex flex-col items-center w-full">
+                            <h1>{"Books"}</h1>
+                            <div class="flex flex-col items-center w-full">
+                            </div>
+                        </div>
+                    }
+                })
+        }}
+    </Transition>
     }
 }
 

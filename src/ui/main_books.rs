@@ -427,7 +427,7 @@ pub fn ChapterView(
                                     <h1>{&book_name}</h1>
                                     <h2>{&chapter_detail.chapter_name}</h2>
                                     <button
-                                        class="w-full p-2 shadow-sm bg-green-50 hover:bg-blue-50 hover:shadow-xl rounded-md border border-solid"
+                                        class="w-full p-2 shadow-sm bg-blue-50 hover:bg-green-50 hover:shadow-xl rounded-md border border-solid"
                                         on:click=move |_| {
                                             set_player_props(
                                                 Some(AudioProps {
@@ -443,7 +443,7 @@ pub fn ChapterView(
                                     </button>
                                     <button
 
-                                        class="w-full p-2 shadow-sm bg-green-50 hover:bg-blue-50 hover:shadow-xl rounded-md border border-solid"
+                                        class="w-full p-2 shadow-sm bg-blue-50 hover:bg-green-50 hover:shadow-xl rounded-md border border-solid"
                                         on:click=move |_| {
                                             set_player_props(None);
                                         }
@@ -452,7 +452,7 @@ pub fn ChapterView(
                                         Stop Play
                                     </button>
                                     <button
-                                        class="w-full p-2 shadow-sm bg-green-50 hover:bg-blue-50 hover:shadow-xl rounded-md border border-solid"
+                                        class="w-full p-2 shadow-sm bg-blue-50 hover:bg-green-50 hover:shadow-xl rounded-md border border-solid"
 
                                         on:click=move |_| {
                                             let book_detail = book_detail.clone();

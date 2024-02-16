@@ -3,12 +3,13 @@ use serde::{Deserialize, Serialize};
 
 use super::book::{BookDetail, ChapterDetail};
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ProgressResult {
     pub account_id: i32,
     pub music_id: i32,
     pub chapter_id: i32,
     pub progress: f64,
+    pub update: String,
 }
 
 #[cfg(feature = "ssr")]
@@ -19,6 +20,7 @@ impl From<crate::entities::progress::Model> for ProgressResult {
             music_id: p.music_id,
             chapter_id: p.chapter_id,
             progress: p.progress,
+            update: p.update,
         }
     }
 }
@@ -135,13 +137,19 @@ pub async fn set_progress(
         let mut p = p.into_active_model();
         p.chapter_id = sea_orm::ActiveValue::set(chapter_id);
         p.progress = sea_orm::ActiveValue::set(progress);
+        let now = chrono::Utc::now();
+        let now_str = now.to_rfc3339();
+        p.update = sea_orm::ActiveValue::set(now_str);
         p.save(&db).await?;
     } else {
+        let now = chrono::Utc::now();
+        let now_str = now.to_rfc3339();
         Progress::insert(progress::ActiveModel {
             account_id: sea_orm::ActiveValue::set(account_id),
             music_id: sea_orm::ActiveValue::set(music_id),
             chapter_id: sea_orm::ActiveValue::set(chapter_id),
             progress: sea_orm::ActiveValue::set(progress),
+            update: sea_orm::ActiveValue::set(now_str),
         })
         .exec(&db)
         .await?;

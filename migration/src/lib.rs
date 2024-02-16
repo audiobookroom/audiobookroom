@@ -18,8 +18,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20230917_000001_create_account_table::Migration),
             Box::new(m20230917_000002_create_author::Migration),
             Box::new(m20230917_000003_create_music_table::Migration),
-            Box::new(m20240207_235046_create_music_chapter::Migration),
             Box::new(m20240208_000001_create_progress_table::Migration),
+            Box::new(m20240207_235046_create_music_chapter::Migration),
         ]
     }
 }

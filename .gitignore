@@ -4,3 +4,4 @@ test_book
 fetchbook
 *.db
 node_modules
+test_entity

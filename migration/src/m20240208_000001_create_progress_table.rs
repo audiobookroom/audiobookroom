@@ -23,12 +23,20 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(Progress::Table)
-                    
                     .col(ColumnDef::new(Progress::AccountId).integer().not_null())
                     .col(ColumnDef::new(Progress::MusicId).integer().not_null())
                     .col(ColumnDef::new(Progress::ChapterId).integer().not_null())
-                    .col(ColumnDef::new(Progress::Progress).double().not_null()).primary_key(
-                        Index::create().col(Progress::AccountId).col(Progress::MusicId)
+                    .col(ColumnDef::new(Progress::Progress).double().not_null())
+                    .primary_key(
+                        Index::create()
+                            .col(Progress::AccountId)
+                            .col(Progress::MusicId),
+                    )
+                    .col(
+                        ColumnDef::new(Progress::Update)
+                            .timestamp()
+                            .default(Expr::current_timestamp())
+                            .not_null(),
                     )
                     .foreign_key(
                         ForeignKey::create()
@@ -97,4 +105,5 @@ pub enum Progress {
     MusicId,
     ChapterId,
     Progress,
+    Update,
 }
