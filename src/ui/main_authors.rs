@@ -64,12 +64,12 @@ fn AuthorIndex(
                                 Ok(authors) => {
                                     let number_of_pages = authors.number_of_pages;
                                     view! {
+                                        {if !authors.items.is_empty() {
+                                            view! { <h1>{"authors:"}</h1> }
+                                        } else {
+                                            view! { <h1>{"No authors"}</h1> }
+                                        }}
 
-                                            {if !authors.items.is_empty() {
-                                                view! { <h1>{"authors:"}</h1> }
-                                            } else {
-                                                view! { <h1>{"No authors"}</h1> }
-                                            }}
                                         <div class="flex flex-row justify-between  items-center  space-x-1 w-full flex-wrap">
 
                                             {authors

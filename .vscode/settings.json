@@ -4,7 +4,7 @@
   "customLocalFormatters.formatters": [
     {
       "languages": ["rust"],
-      "command": "leptosfmt -s|rustfmt --edition 2021"
+      "command": "/home/sjq/.cargo/bin/leptosfmt -s|rustfmt --edition 2021"
     }
   ],
   "rust-analyzer.showUnlinkedFileNotification": false,

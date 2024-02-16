@@ -8,6 +8,7 @@ use crate::{
 pub enum BookPageContent {
     Index,
     BookDetail((BookDetail, AuthorDetail)),
+    ChapterDetail((i32, i32)),
 }
 #[component]
 pub fn MainBooks(
@@ -25,6 +26,16 @@ pub fn MainBooks(
                         <BookDetail
                             book_detail=book_detail
                             author_detail=author_detail
+                            set_current_content=set_current_content
+                        />
+                    }
+                        .into_view()
+                }
+                BookPageContent::ChapterDetail((book_id, chapter_id)) => {
+                    view! {
+                        <ChapterView
+                            book_id=book_id
+                            chapter_id=chapter_id
                             set_current_content=set_current_content
                         />
                     }
@@ -61,15 +72,13 @@ fn BookIndex(#[prop(into)] set_current_content: Callback<BookPageContent, ()>) -
                                 Ok(books) => {
                                     let number_of_pages = books.number_of_pages;
                                     view! {
-                                        
+                                        {if !books.items.is_empty() {
+                                            view! { <h1>{"Books:"}</h1> }
+                                        } else {
+                                            view! { <h1>{"No books"}</h1> }
+                                        }}
 
-                                            {if !books.items.is_empty() {
-                                                view! { <h1>{"Books:"}</h1> }
-                                            } else {
-                                                view! { <h1>{"No books"}</h1> }
-                                            }}
-                                            
-                                            <div class="flex flex-row justify-between  items-center  space-y-1 space-x-1 flex-wrap w-full">
+                                        <div class="flex flex-row justify-between  items-center  space-y-1 space-x-1 flex-wrap w-full">
                                             {books
                                                 .items
                                                 .into_iter()
@@ -232,34 +241,26 @@ fn BookDetail(
                             .map(|current_p| {
                                 match current_p {
                                     Some((progress_item, book, chapter)) => {
-                                        let book_id = progress_item.music_id;
-                                        let chapter_id = progress_item.chapter_id;
                                         let init_time = progress_item.progress;
                                         view! {
                                             <button
                                                 class="w-full mx-2 px-2 py-1 bg-blue-50 hover:bg-green-50 border border-solid rounded-sm shadow-md hover:shadow-lg"
                                                 on:click=move |_e| {
-                                                    set_player_props(
-                                                        Some(crate::ui::player::AudioProps {
-                                                            book_id,
-                                                            chapter_id,
-                                                            init_time,
-                                                        }),
-                                                    );
+                                                    on_progress_button_click(user.id, book.id);
                                                 }
                                             >
 
                                                 <h2>{&book.name}</h2>
 
                                                 {move || {
-                                                    let (min, sec) = crate::ui::translate_time(init_time as i64);
+                                                    let (min, sec) = crate::ui::translate_time(
+                                                        init_time as i64,
+                                                    );
                                                     let formated_time = crate::ui::formate_time(min, sec);
                                                     view! {
                                                         <h3>{&chapter.chapter_name}</h3>
 
-                                                        <p>
-                                                            {format!("Current progress: {}", formated_time)}
-                                                        </p>
+                                                        <p>{format!("Current progress: {}", formated_time)}</p>
                                                     }
                                                         .into_view()
                                                 }}
@@ -301,8 +302,12 @@ fn BookDetail(
                                                         <button
                                                             class="w-full  px-2 py-1 bg-blue-50 hover:bg-green-50 border border-solid rounded-sm shadow-md hover:shadow-lg"
                                                             on:click=move |_| {
-
-                                                                on_progress_button_click(user.id, book_detail.id);
+                                                                set_current_content(
+                                                                    BookPageContent::ChapterDetail((
+                                                                        book_detail.id,
+                                                                        chapter_detail.id,
+                                                                    )),
+                                                                );
                                                             }
                                                         >
 
@@ -379,6 +384,93 @@ fn BookDetail(
             </Transition>
 
             <button on:click=move |_| set_current_content(BookPageContent::Index)>{"Back"}</button>
+        </div>
+    }
+}
+
+#[component]
+pub fn ChapterView(
+    book_id: i32,
+    chapter_id: i32,
+    #[prop(into)] set_current_content: Callback<BookPageContent, ()>,
+) -> impl IntoView {
+    let set_player_props = use_context::<WriteSignal<Option<AudioProps>>>().unwrap();
+
+    let book_chapter_detail = create_resource(
+        || {},
+        move |_| async move {
+            let book_detail = crate::server_api::book::get_book_detail(book_id)
+                .await
+                .unwrap();
+            let author_detail = crate::server_api::authors::get_author_by_id(book_detail.author_id)
+                .await
+                .unwrap()
+                .unwrap();
+            let chapter_detail = crate::server_api::book::get_chatper_detail(chapter_id)
+                .await
+                .unwrap();
+            (book_detail, author_detail, chapter_detail)
+        },
+    );
+    view! {
+        <div class="flex flex-col  w-full">
+            <Transition fallback=move || {
+                view! { <p>{"Loading..."}</p> }
+            }>
+                {move || {
+                    book_chapter_detail
+                        .get()
+                        .map(|(book_detail, author_detail, chapter_detail)| {
+                            let book_name = book_detail.name.clone();
+                            view! {
+                                <div class="flex flex-col items-stretch w-full space-y-2">
+                                    <h1>{&book_name}</h1>
+                                    <h2>{&chapter_detail.chapter_name}</h2>
+                                    <button
+                                        class="w-full p-2 shadow-sm bg-green-50 hover:bg-blue-50 hover:shadow-xl rounded-md border border-solid"
+                                        on:click=move |_| {
+                                            set_player_props(
+                                                Some(AudioProps {
+                                                    book_id,
+                                                    chapter_id,
+                                                    init_time: 0.,
+                                                }),
+                                            );
+                                        }
+                                    >
+
+                                        start Play
+                                    </button>
+                                    <button
+
+                                        class="w-full p-2 shadow-sm bg-green-50 hover:bg-blue-50 hover:shadow-xl rounded-md border border-solid"
+                                        on:click=move |_| {
+                                            set_player_props(None);
+                                        }
+                                    >
+
+                                        Stop Play
+                                    </button>
+                                    <button
+                                        class="w-full p-2 shadow-sm bg-green-50 hover:bg-blue-50 hover:shadow-xl rounded-md border border-solid"
+
+                                        on:click=move |_| {
+                                            let book_detail = book_detail.clone();
+                                            let author_detail = author_detail.clone();
+                                            set_current_content(
+                                                BookPageContent::BookDetail((book_detail, author_detail)),
+                                            );
+                                        }
+                                    >
+
+                                        Back
+                                    </button>
+                                </div>
+                            }
+                        })
+                }}
+
+            </Transition>
         </div>
     }
 }

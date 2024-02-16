@@ -53,7 +53,7 @@ pub fn MainIndex() -> impl IntoView {
                                             let book_id = progress_item.music_id;
                                             let init_time = progress_item.progress;
                                             let chapter_name = chapter.chapter_name.clone();
-                                            let (min,sec) = super::translate_time(init_time as i64);
+                                            let (min, sec) = super::translate_time(init_time as i64);
                                             view! {
                                                 <button
                                                     class="w-full mx-2 px-2 py-1 bg-blue-50 hover:bg-green-50 border border-solid rounded-sm shadow-md hover:shadow-lg"
@@ -66,7 +66,12 @@ pub fn MainIndex() -> impl IntoView {
                                                     {move || {
                                                         view! {
                                                             <h3>{&chapter_name}</h3>
-                                                            <p>{format!("Current progress: {}", super::formate_time(min, sec))}</p>
+                                                            <p>
+                                                                {format!(
+                                                                    "Current progress: {}",
+                                                                    super::formate_time(min, sec),
+                                                                )}
+                                                            </p>
                                                         }
                                                             .into_view()
                                                     }}

@@ -301,12 +301,7 @@ pub fn Player(
                                     }
                                         .into_view()
                                 }
-                                None => {
-                                    view! {
-                                        <div>"No audio set"</div>
-                                    }
-                                        .into_view()
-                                }
+                                None => view! { <div>"No audio set"</div> }.into_view(),
                             }
                         })
                 }}
