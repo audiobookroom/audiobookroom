@@ -7,7 +7,6 @@ use leptos::{ev::MouseEvent, html::Audio, *};
 pub struct AudioProps {
     pub chapter_id: i32,
     pub book_id: i32,
-    pub total_chapters: i32,
     pub init_time: f64,
 }
 #[component]
@@ -46,7 +45,6 @@ pub fn Player(
         let total_time = player_ref_node.get().unwrap().duration();
         set_total_time(total_time);
     };
-    let global_progress = use_context::<RwSignal<Option<ProgressResult>>>().unwrap();
     let on_time_updated = move |_e| {
         // first set current time
 
@@ -56,12 +54,6 @@ pub fn Player(
         let props = props.get();
 
         if let Some(props) = props {
-            global_progress.set(Some(ProgressResult {
-                account_id: user.id,
-                music_id: props.book_id,
-                chapter_id: props.chapter_id,
-                progress: current_time,
-            }));
             if let Some(last_save_time) = last_saved_time {
                 if last_save_time.chapter_id != props.chapter_id
                     || (last_save_time.progress - current_time).abs() >= 10.
@@ -133,7 +125,6 @@ pub fn Player(
                                             on:ended=move |_e| on_ended(AudioProps {
                                                 chapter_id: chapter_detail.id,
                                                 book_id: book_detail.id,
-                                                total_chapters: book_detail.chapters,
                                                 init_time: 0.0,
                                             })
 
@@ -174,16 +165,15 @@ pub fn Player(
 
                                                                     </p>
                                                                 </div>
-                                                               
+
                                                             </div>
                                                             <div class="flex justify-between items-center mt-2">
-                                                              
+
                                                                 <div
                                                                     class="text-grey-darker hover:shadow-lg hover:bg-slate-100"
                                                                     on:click=move |_| on_previouse(AudioProps {
                                                                         chapter_id: chapter_detail.id,
                                                                         book_id: book_detail.id,
-                                                                        total_chapters: book_detail.chapters,
                                                                         init_time: 0.0,
                                                                     })
                                                                 >
@@ -234,7 +224,6 @@ pub fn Player(
                                                                     on:click=move |_| on_next(AudioProps {
                                                                         chapter_id: chapter_detail.id,
                                                                         book_id: book_detail.id,
-                                                                        total_chapters: book_detail.chapters,
                                                                         init_time: 0.0,
                                                                     })
                                                                 >
@@ -248,7 +237,7 @@ pub fn Player(
                                                                         <path d="M13 5h3v10h-3V5zM4 5l9 5-9 5V5z"></path>
                                                                     </svg>
                                                                 </div>
-                                                                
+
                                                             </div>
                                                         </div>
                                                     </div>

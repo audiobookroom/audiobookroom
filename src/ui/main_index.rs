@@ -17,6 +17,18 @@ pub fn MainIndex() -> impl IntoView {
             current_p
         },
     );
+    let on_progress_button_click = move |account_id: i32, book_id: i32| {
+        spawn_local(async move {
+            let progress = crate::server_api::progress::get_progress(book_id, account_id).await;
+            if let Ok(Some(k)) = progress {
+                set_player_prop(Some(crate::ui::player::AudioProps {
+                    book_id,
+                    chapter_id: k.chapter_id,
+                    init_time: k.progress,
+                }));
+            }
+        });
+    };
 
     view! {
         <div class="flex flex-col items-center text-center w-full">
@@ -39,22 +51,14 @@ pub fn MainIndex() -> impl IntoView {
                                     p.iter()
                                         .map(|(progress_item, book, chapter)| {
                                             let book_id = progress_item.music_id;
-                                            let chapter_id = progress_item.chapter_id;
                                             let init_time = progress_item.progress;
-                                            let total_chapters = book.chapters;
                                             let chapter_name = chapter.chapter_name.clone();
+                                            let (min,sec) = super::translate_time(init_time as i64);
                                             view! {
                                                 <button
                                                     class="w-full mx-2 px-2 py-1 bg-blue-50 hover:bg-green-50 border border-solid rounded-sm shadow-md hover:shadow-lg"
                                                     on:click=move |_e| {
-                                                        set_player_prop(
-                                                            Some(crate::ui::player::AudioProps {
-                                                                book_id,
-                                                                chapter_id,
-                                                                init_time,
-                                                                total_chapters,
-                                                            }),
-                                                        );
+                                                        on_progress_button_click(user.id, book_id);
                                                     }
                                                 >
 
@@ -62,7 +66,7 @@ pub fn MainIndex() -> impl IntoView {
                                                     {move || {
                                                         view! {
                                                             <h3>{&chapter_name}</h3>
-                                                            <p>{format!("Current progress: {}", init_time)}</p>
+                                                            <p>{format!("Current progress: {}:{}", min,sec)}</p>
                                                         }
                                                             .into_view()
                                                     }}

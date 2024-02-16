@@ -203,7 +203,18 @@ fn BookDetail(
             }
         },
     );
-
+    let on_progress_button_click = move |account_id: i32, book_id: i32| {
+        spawn_local(async move {
+            let progress = crate::server_api::progress::get_progress(book_id, account_id).await;
+            if let Ok(Some(k)) = progress {
+                set_player_props(Some(crate::ui::player::AudioProps {
+                    book_id,
+                    chapter_id: k.chapter_id,
+                    init_time: k.progress,
+                }));
+            }
+        });
+    };
     view! {
         <div class="flex flex-col items-center text-center w-full ">
             <h1>{&book_detail.name}</h1>
@@ -231,7 +242,6 @@ fn BookDetail(
                                                             book_id,
                                                             chapter_id,
                                                             init_time,
-                                                            total_chapters: book.chapters,
                                                         }),
                                                     );
                                                 }
@@ -287,14 +297,8 @@ fn BookDetail(
                                                         <button
                                                             class="w-full  px-2 py-1 bg-blue-50 hover:bg-green-50 border border-solid rounded-sm shadow-md hover:shadow-lg"
                                                             on:click=move |_| {
-                                                                set_player_props(
-                                                                    Some(AudioProps {
-                                                                        chapter_id: chapter_detail.id,
-                                                                        book_id: book_detail.id,
-                                                                        total_chapters: book_detail.chapters,
-                                                                        init_time: 0.0,
-                                                                    }),
-                                                                );
+
+                                                                on_progress_button_click(user.id, book_detail.id);
                                                             }
                                                         >
 
