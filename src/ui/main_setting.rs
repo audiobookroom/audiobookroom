@@ -293,7 +293,8 @@ pub fn DeleteBookDetail(book_id:i32,set_content:WriteSignal<SettingsContent>)->i
             None
         },
     );
-
+    let pending = delete_book.pending();
+    let done = delete_book.value();
     view! {
         <Transition fallback=move || {
             view! { <span>"Loading..."</span> }
@@ -328,6 +329,18 @@ pub fn DeleteBookDetail(book_id:i32,set_content:WriteSignal<SettingsContent>)->i
 
         </Transition>
         <div class="w-full">
+            <h1 class="w-full text-center">
+                {move || {
+                    if pending.get() {
+                        "Deleting... please wait"
+                    } else if done.get().is_some() {
+                        "Done"
+                    } else {
+                        ""
+                    }
+                }}
+
+            </h1>
             <button
 
                 class="w-full text-center bg-blue-50 hover:bg-green-50 px-1 py-1 my-2 border border-solid rounded-full"
