@@ -1,0 +1,12 @@
+FROM rust
+
+# Install cargo-leptos
+RUN cargo install cargo-leptos
+
+# Install npm and rsync using apt
+RUN apt-get update && apt-get install -y npm rsync
+
+# Add target wasm32-unknown-unknown using rustup
+RUN rustup target add wasm32-unknown-unknown
+
+CMD ["bash"]

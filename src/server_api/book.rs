@@ -10,6 +10,7 @@ pub struct BookChapter {
     name: String,
     url: String,
 }
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PageItems<T> {
     pub page: u64,
@@ -29,6 +30,7 @@ pub struct BookDetail {
     pub file_folder: String,
     pub music_type: i32,
 }
+
 #[cfg(feature = "ssr")]
 impl From<crate::entities::music::Model> for BookDetail {
     fn from(m: crate::entities::music::Model) -> Self {
@@ -109,6 +111,7 @@ pub async fn get_book_detail(book_id: i32) -> Result<BookDetail, ServerFnError> 
         .ok_or(ServerFnError::new("Book not found"))?;
     Ok(book.into())
 }
+
 #[server]
 pub async fn get_books_details(
     page_num: u64,
@@ -150,6 +153,7 @@ pub async fn get_books_details(
         items,
     })
 }
+
 #[server]
 pub async fn get_books(
     page_num: u64,
@@ -200,6 +204,7 @@ pub async fn get_books(
 pub struct AddBookResult {
     pub msg: String,
 }
+
 #[server]
 pub async fn add_book(
     author_name: String,
@@ -222,7 +227,7 @@ pub async fn add_book(
         std::path::Path::new(&source),
         &db,
     )
-    .await;
+        .await;
     if let Err(e) = create_result {
         return Err(ServerFnError::new(e.to_string()));
     }
@@ -250,6 +255,7 @@ pub struct ChapterDetail {
     pub chapter_url: String,
     pub chapter_length: Option<f64>,
 }
+
 #[cfg(feature = "ssr")]
 impl From<crate::entities::chapter::Model> for ChapterDetail {
     fn from(c: crate::entities::chapter::Model) -> Self {
@@ -362,4 +368,41 @@ pub async fn get_chatper_detail(chapter_id: i32) -> Result<ChapterDetail, Server
         chapter_url: chapter.chapter_url,
         chapter_length: chapter.chapter_length,
     })
+}
+
+#[server]
+pub async fn delete_book(book_id: i32) -> Result<(), ServerFnError> {
+    crate::server_api::auth::get_user()
+        .await?
+        .ok_or(ServerFnError::new("Not logged in"))?;
+
+    use crate::ssr::*;
+    use sea_orm::prelude::*;
+    let db = db()?;
+    use crate::entities::prelude::*;
+    use crate::entities::*;
+    let book = Music::find_by_id(book_id).one(&db).await?;
+    if let Some(book) = book {
+        // delete the progress
+        let all_progress = book.find_related(Progress).all(&db).await?;
+        for p in all_progress {
+            p.delete(&db).await?;
+        }
+        // delete the chapters
+        let all_chapters = book.find_related(Chapter).all(&db).await?;
+        for c in all_chapters {
+            c.delete(&db).await?;
+        }
+        // delete the book
+        Music::delete_by_id(book.id).exec(&db).await?;
+
+        let book_count = Music::find().filter(
+            music::Column::AuthorId.eq(book.author_id)
+        ).count(&db).await?;
+        if book_count == 0 {
+            // delete the author
+            Author::delete_by_id(book.author_id).exec(&db).await?;
+        }
+    }
+    Ok(())
 }
