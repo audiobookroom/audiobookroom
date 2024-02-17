@@ -1,5 +1,7 @@
 use leptos::*;
 
+use crate::{server_api::auth::Logout, ui::app::LogoutContext};
+
 mod add_book;
 mod add_user;
 mod change_passwd;
@@ -21,6 +23,7 @@ pub enum SettingsContent {
 pub fn MainSettings() -> impl IntoView {
     let (current_content, set_current_content) = create_signal(SettingsContent::Main);
     let user = use_context::<crate::server_api::User>().unwrap();
+    let logout_action = use_context::<LogoutContext>().unwrap().0;
     view! {
         {move || {
             match current_content.get() {
@@ -105,6 +108,16 @@ pub fn MainSettings() -> impl IntoView {
                             >
 
                                 {"Change Password"}
+
+                            </button>
+                            <button
+                                class="w-full text-center bg-red-200 hover:bg-red-300 px-1 py-1 my-2 border border-solid rounded-full"
+                                on:click=move |_| {
+                                    logout_action.dispatch(Logout {});
+                                }
+                            >
+
+                                {"Logout"}
 
                             </button>
 

@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use crate::entities::{prelude::*, *};
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use sea_orm::{ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, Set};
 use tracing::{debug, info};
 pub async fn arrange_new_folder(
     src_dir: impl AsRef<Path>,
@@ -167,7 +167,12 @@ pub async fn create_new_book(
     Ok(())
 }
 
-pub async fn create_new_user(username: String, password: String, db: &sea_orm::DatabaseConnection) {
+pub async fn create_new_user(
+    username: String,
+    password: String,
+    role: i32,
+    db: &sea_orm::DatabaseConnection,
+) {
     pub use bcrypt::{hash, DEFAULT_COST};
     use sea_orm::prelude::*;
 
@@ -176,10 +181,40 @@ pub async fn create_new_user(username: String, password: String, db: &sea_orm::D
     let user = account::ActiveModel {
         name: sea_orm::ActiveValue::Set(username),
         password: sea_orm::ActiveValue::Set(password_hashed),
-        role_level: sea_orm::ActiveValue::Set(1),
+        role_level: sea_orm::ActiveValue::Set(role),
         ..Default::default()
     };
     let _user = user.insert(db).await.unwrap();
+}
+pub async fn alter_user(
+    username: String,
+    password: Option<String>,
+    role: Option<i32>,
+    db: &sea_orm::DatabaseConnection,
+) {
+    pub use bcrypt::{hash, DEFAULT_COST};
+    use sea_orm::prelude::*;
+
+    let password_hashed = password.map(|password| hash(password, DEFAULT_COST).unwrap());
+
+    let user = Account::find()
+        .filter(account::Column::Name.eq(&username))
+        .one(db)
+        .await
+        .unwrap();
+    if let Some(user) = user {
+        let mut user = user.into_active_model();
+        if let Some(password) = password_hashed {
+            user.password = Set(password);
+        }
+        if let Some(role) = role {
+            user.role_level = Set(role);
+        }
+        user.save(db).await.unwrap();
+        info!("user altered:{}", username);
+    }else{
+        info!("user not found:{}", username);
+    }
 }
 #[cfg(test)]
 mod tests {}

@@ -16,7 +16,11 @@ watch:
     cargo leptos watch
 deploy target_addr:
     cargo leptos build --release
-    cargo build --release --bin add_book  
-    rsync -au --progress ./target/release/audiobookroom ./target/site  ./target/release/add_book {{target_addr}}:~/
+    cargo build --release --bin add_book --bin add_user --bin modify_user
+    rsync -au --progress ./target/release/audiobookroom ./target/site \
+      ./target/release/add_book \
+       ./target/release/add_user \
+        ./target/release/modify_user \
+         {{target_addr}}:~/
 add_book author name:
     cargo run --bin add_book --features=ssr -- --db sqlite://audiobookroom.db --new-book-name {{name}} --author-name {{author}} --source-dir ./testbooks --book-dir fetchbook  

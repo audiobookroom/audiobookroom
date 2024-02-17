@@ -1,6 +1,6 @@
-use crate::{errors::AudioAppError, server_api::User};
 use crate::server_api::auth::*;
 use crate::ui::main_page::MainPage;
+use crate::{errors::AudioAppError, server_api::User};
 
 use leptos::*;
 use leptos_meta::{provide_meta_context, Link, Stylesheet};
@@ -33,12 +33,16 @@ pub fn App() -> impl IntoView {
         </div>
     }
 }
-
+#[derive(Clone,Copy)]
+pub struct LogoutContext(pub Action<Logout, Result<(), ServerFnError>>);
 #[component]
 fn Main() -> impl IntoView {
     let logout: Action<Logout, Result<(), ServerFnError>> = create_server_action::<Logout>();
     let login = create_server_action::<Login>();
     let signup = create_server_action::<Signup>();
+
+    provide_context(LogoutContext(logout));
+
     let user = create_resource(
         move || {
             (
@@ -59,9 +63,7 @@ fn Main() -> impl IntoView {
                         .map(|user| {
                             user.map(|user| {
                                     match user {
-                                        Some(user) => {
-                                            view! { <MainPage user=user logout=logout/> }.into_view()
-                                        }
+                                        Some(user) => view! { <MainPage user=user/> }.into_view(),
                                         None => {
                                             view! { <LoginPage login=login signup=signup/> }.into_view()
                                         }

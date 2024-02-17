@@ -15,7 +15,7 @@ mod ssr {
         } = Cli::parse();
 
         let db = Database::connect(&db).await.unwrap();
-        audiobookroom::tools::create_new_user(name, password, role, &db).await;
+        audiobookroom::tools::alter_user(name, password, role, &db).await;
     }
 
     #[derive(Debug, Parser)]
@@ -23,10 +23,12 @@ mod ssr {
         /// the database url,start at "mysql://"
         #[clap(short, long)]
         db: String,
-
+        #[clap(short, long)]
         name: String,
-        password: String,
-        role: i32,
+        #[clap(short, long)]
+        password: Option<String>,
+        #[clap(short, long)]
+        role: Option<i32>,
     }
 }
 

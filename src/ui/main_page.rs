@@ -1,8 +1,7 @@
 use leptos::*;
-use leptos_router::ActionForm;
 
 use crate::{
-    server_api::{auth::Logout, progress::SetProgress, User},
+    server_api::{progress::SetProgress, User},
     ui::{
         main_authors::MainAuthors,
         main_books::MainBooks,
@@ -22,7 +21,7 @@ pub enum MainPageContent {
     Settings,
 }
 #[component]
-pub fn MainPage(user: User, logout: super::ServerAction<Logout, ()>) -> impl IntoView {
+pub fn MainPage(user: User) -> impl IntoView {
     let (current_content, set_current_content) = create_signal(MainPageContent::Index);
     let (book_current_content, set_book_current_content) = create_signal(BookPageContent::Index);
 
@@ -96,14 +95,7 @@ pub fn MainPage(user: User, logout: super::ServerAction<Logout, ()>) -> impl Int
             <div class="flex flex-col my-2">
                 <div class="flex justify-between items-center">
                     <span>{format!("Welcome {}", user.username)}</span>
-                    <ActionForm action=logout>
-                        <button
-                            type="submit"
-                            class="  hover:bg-gray-50 hover:shadow-lg text-gray-800"
-                        >
-                            Log Out
-                        </button>
-                    </ActionForm>
+
                 </div>
                 <div class="flex justify-between items-center space-x-2">
                     <button
