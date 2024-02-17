@@ -56,11 +56,9 @@ pub async fn get_books_by_author(
         .await?
         .ok_or(ServerFnError::new("Not logged in"))?;
 
-    use crate::{
-        entities::{prelude::*, *},
-        ssr::*,
-    };
+    use crate::entities::{prelude::*, *};
 
+    use super::ssr::*;
     use sea_orm::prelude::*;
     use sea_orm::{ItemsAndPagesNumber, QueryOrder};
     let db = db()?;
@@ -100,10 +98,9 @@ pub async fn get_book_detail(book_id: i32) -> Result<BookDetail, ServerFnError> 
         .await?
         .ok_or(ServerFnError::new("Not logged in"))?;
 
-    use crate::{entities::music, ssr::*};
-    use sea_orm::prelude::*;
+    use super::ssr::*;
+    use crate::entities::music;
     let db = db()?;
-    use crate::entities::prelude::*;
     let book = Music::find()
         .filter(music::Column::Id.eq(book_id))
         .one(&db)
@@ -121,11 +118,9 @@ pub async fn get_books_details(
         .await?
         .ok_or(ServerFnError::new("Not logged in"))?;
 
-    use crate::{
-        entities::{prelude::*, *},
-        ssr::*,
-    };
+    use crate::entities::{prelude::*, *};
 
+    use super::ssr::*;
     use sea_orm::prelude::*;
     use sea_orm::{ItemsAndPagesNumber, QueryOrder};
     let db = db()?;
@@ -163,11 +158,9 @@ pub async fn get_books(
         .await?
         .ok_or(ServerFnError::new("Not logged in"))?;
 
-    use crate::{
-        entities::{prelude::*, *},
-        ssr::*,
-    };
+    use crate::entities::{prelude::*, *};
 
+    use super::ssr::*;
     use sea_orm::prelude::*;
     use sea_orm::{ItemsAndPagesNumber, QueryOrder};
     let db = db()?;
@@ -215,8 +208,7 @@ pub async fn add_book(
         .await?
         .ok_or(ServerFnError::new("Not logged in"))?;
 
-    use crate::ssr::*;
-
+    use super::ssr::*;
     let db = db()?;
     // first create the author
 
@@ -227,7 +219,7 @@ pub async fn add_book(
         std::path::Path::new(&source),
         &db,
     )
-        .await;
+    .await;
     if let Err(e) = create_result {
         return Err(ServerFnError::new(e.to_string()));
     }
@@ -280,10 +272,9 @@ pub async fn get_chapters(
         .await?
         .ok_or(ServerFnError::new("Not logged in"))?;
 
-    use crate::{
-        entities::{prelude::*, *},
-        ssr::*,
-    };
+    use super::ssr::*;
+    use crate::entities::*;
+
     use sea_orm::prelude::*;
     use sea_orm::{ItemsAndPagesNumber, QueryOrder};
     let db = db()?;
@@ -324,12 +315,10 @@ pub async fn search_chapter_by_chapter_num(
     crate::server_api::auth::get_user()
         .await?
         .ok_or(ServerFnError::new("Not logged in"))?;
+    use super::ssr::*;
 
-    use crate::ssr::*;
-    use sea_orm::prelude::*;
     let db = db()?;
     use crate::entities::chapter;
-    use crate::entities::prelude::*;
     let chapter = Chapter::find()
         .filter(chapter::Column::MusicId.eq(book_id))
         .filter(chapter::Column::ChapterNum.eq(chapter_num))
@@ -351,11 +340,9 @@ pub async fn get_chatper_detail(chapter_id: i32) -> Result<ChapterDetail, Server
     crate::server_api::auth::get_user()
         .await?
         .ok_or(ServerFnError::new("Not logged in"))?;
+    use super::ssr::*;
 
-    use crate::ssr::*;
-    use sea_orm::prelude::*;
     let db = db()?;
-    use crate::entities::prelude::*;
     let chapter = Chapter::find_by_id(chapter_id)
         .one(&db)
         .await?
@@ -375,11 +362,10 @@ pub async fn delete_book(book_id: i32) -> Result<(), ServerFnError> {
     crate::server_api::auth::get_user()
         .await?
         .ok_or(ServerFnError::new("Not logged in"))?;
+    use super::ssr::*;
 
-    use crate::ssr::*;
     use sea_orm::prelude::*;
     let db = db()?;
-    use crate::entities::prelude::*;
     use crate::entities::*;
     let book = Music::find_by_id(book_id).one(&db).await?;
     if let Some(book) = book {
@@ -396,9 +382,10 @@ pub async fn delete_book(book_id: i32) -> Result<(), ServerFnError> {
         // delete the book
         Music::delete_by_id(book.id).exec(&db).await?;
 
-        let book_count = Music::find().filter(
-            music::Column::AuthorId.eq(book.author_id)
-        ).count(&db).await?;
+        let book_count = Music::find()
+            .filter(music::Column::AuthorId.eq(book.author_id))
+            .count(&db)
+            .await?;
         if book_count == 0 {
             // delete the author
             Author::delete_by_id(book.author_id).exec(&db).await?;

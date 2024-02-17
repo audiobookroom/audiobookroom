@@ -3,8 +3,7 @@ mod ssr {
 
     use audiobookroom::{
         fallback::file_and_error_handler,
-        server_api::auth::{ssr::AuthSession, User},
-        ssr::init_logger_info,
+        server_api::{ssr::*, User},
         state::AppState,
         ui::app::App,
     };

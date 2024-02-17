@@ -28,14 +28,14 @@ futures = "0.3"
 # leptos_meta = { version = "0.6", features = ["nightly"] }
 # leptos_axum = { version = "0.6", optional = true }
 # leptos_router = { version = "0.6", features = ["nightly"] }
-leptos = { git = "https://github.com/leptos-rs/leptos.git", rev = "cbb8b5b8325f1cea911eb4e2eec4f437778e0def", features = [
+leptos = { git = "https://github.com/leptos-rs/leptos.git", features = [
     "nightly",
 ] }
-leptos_meta = { git = "https://github.com/leptos-rs/leptos.git", rev = "cbb8b5b8325f1cea911eb4e2eec4f437778e0def", features = [
+leptos_meta = { git = "https://github.com/leptos-rs/leptos.git", features = [
     "nightly",
 ] }
-leptos_axum = { git = "https://github.com/leptos-rs/leptos.git", rev = "cbb8b5b8325f1cea911eb4e2eec4f437778e0def", optional = true }
-leptos_router = { git = "https://github.com/leptos-rs/leptos.git", rev = "cbb8b5b8325f1cea911eb4e2eec4f437778e0def", features = [
+leptos_axum = { git = "https://github.com/leptos-rs/leptos.git", optional = true }
+leptos_router = { git = "https://github.com/leptos-rs/leptos.git", features = [
     "nightly",
 ] }
 

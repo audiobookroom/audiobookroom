@@ -1,7 +1,7 @@
 #[cfg(feature = "ssr")]
 mod ssr {
 
-    use audiobookroom::ssr::init_logger_info;
+    use audiobookroom::server_api::ssr::init_logger_info;
     use clap::Parser;
     use sea_orm::Database;
     pub async fn main() {

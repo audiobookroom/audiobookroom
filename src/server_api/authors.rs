@@ -25,8 +25,7 @@ impl From<crate::entities::author::Model> for AuthorDetail {
 #[server]
 pub async fn get_author_by_id(id: i32) -> Result<Option<AuthorDetail>, ServerFnError> {
     use crate::entities::prelude::*;
-    use crate::ssr::*;
-    use sea_orm::prelude::*;
+    use super::ssr::*;
     let db = db()?;
     crate::server_api::auth::get_user()
         .await?
@@ -43,7 +42,8 @@ pub async fn list_all_authors(
 ) -> Result<PageItems<AuthorDetail>, ServerFnError> {
     use crate::entities::author;
     use crate::entities::prelude::*;
-    use crate::ssr::*;
+    use super::ssr::*;
+
     use sea_orm::prelude::*;
     use sea_orm::*;
     let db = db()?;

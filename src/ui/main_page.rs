@@ -2,10 +2,7 @@ use leptos::*;
 use leptos_router::ActionForm;
 
 use crate::{
-    server_api::{
-        auth::{Logout, User},
-        progress::SetProgress,
-    },
+    server_api::{auth::Logout, progress::SetProgress, User},
     ui::{
         main_authors::MainAuthors,
         main_books::MainBooks,

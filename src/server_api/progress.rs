@@ -35,7 +35,7 @@ pub async fn get_progress_detail_by_user(
 
     use crate::entities::prelude::*;
     use crate::entities::*;
-    use crate::ssr::*;
+    use super::ssr::*;
     use sea_orm::prelude::*;
     let db = db()?;
 
@@ -70,8 +70,7 @@ pub async fn get_progress_by_user(account_id: i32) -> Result<Vec<ProgressResult>
 
     use crate::entities::prelude::*;
     use crate::entities::*;
-    use crate::ssr::*;
-    use sea_orm::prelude::*;
+    use super::ssr::*;
     let db = db()?;
 
     let p = Progress::find()
@@ -93,8 +92,7 @@ pub async fn get_progress(
         .ok_or(ServerFnError::new("Not logged in"))?;
 
     use crate::entities::prelude::*;
-    use crate::ssr::*;
-    use sea_orm::prelude::*;
+    use super::ssr::*;
     let db = db()?;
 
     let p = Progress::find_by_id((account_id, music_id))
@@ -119,8 +117,7 @@ pub async fn set_progress(
 
     use crate::entities::prelude::*;
     use crate::entities::*;
-    use crate::ssr::*;
-    use sea_orm::prelude::*;
+    use super::ssr::*;
     let db = db()?;
     let auth = auth()?;
     let current_user = auth.current_user;

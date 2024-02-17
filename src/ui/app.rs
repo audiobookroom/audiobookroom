@@ -1,5 +1,4 @@
-use crate::errors::AudioAppError;
-use crate::server_api::auth::User;
+use crate::{errors::AudioAppError, server_api::User};
 use crate::server_api::auth::*;
 use crate::ui::main_page::MainPage;
 

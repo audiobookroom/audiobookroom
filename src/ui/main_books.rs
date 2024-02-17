@@ -1,7 +1,7 @@
 use leptos::{html::Input, *};
 
 use crate::{
-    server_api::{auth::User, authors::AuthorDetail, book::BookDetail},
+    server_api::{authors::AuthorDetail, book::BookDetail, User},
     ui::player::AudioProps,
 };
 #[derive(Clone, Debug, PartialEq)]

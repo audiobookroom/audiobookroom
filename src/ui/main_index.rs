@@ -1,9 +1,9 @@
 use leptos::*;
 
+use crate::server_api::User;
+
 #[component]
 pub fn MainIndex() -> impl IntoView {
-    use crate::server_api::auth::User;
-
     let user = use_context::<User>().unwrap();
     let set_player_prop =
         use_context::<WriteSignal<Option<crate::ui::player::AudioProps>>>().unwrap();

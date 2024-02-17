@@ -1,6 +1,6 @@
 use crate::server_api::{
-    auth::User,
     book::{get_book_detail, get_chatper_detail},
+    User,
 };
 use leptos::{ev::MouseEvent, html::Audio, *};
 #[derive(Debug, Clone, Copy, PartialEq)]
