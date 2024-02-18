@@ -1,6 +1,24 @@
 use super::User;
 use leptos::*;
 #[server]
+pub async fn get_user_by_id(id: i32) -> Result<User, ServerFnError> {
+    use super::ssr::*;
+    let user = get_user().await?;
+    if !user.is_some_and(|user| user.role == 0 || user.id == id) {
+        return Err(ServerFnError::ServerError(
+            "You are not authorized to get user.".to_string(),
+        ));
+    }
+
+    let db = db()?;
+    let user = entities::account::Entity::find_by_id(id)
+        .one(&db)
+        .await?
+        .ok_or(ServerFnError::new("User does not exist."))?;
+    Ok(user.into())
+}
+
+#[server]
 /// get current login user
 pub async fn get_user() -> Result<Option<User>, ServerFnError> {
     use super::ssr::*;
@@ -8,7 +26,7 @@ pub async fn get_user() -> Result<Option<User>, ServerFnError> {
     Ok(auth.current_user)
 }
 #[server]
-pub async fn get_all_users()->Result<Vec<User>, ServerFnError>{
+pub async fn get_all_users() -> Result<Vec<User>, ServerFnError> {
     use super::ssr::*;
     let db = db()?;
     let users = crate::entities::account::Entity::find().all(&db).await?;
