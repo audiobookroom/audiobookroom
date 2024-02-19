@@ -20,8 +20,16 @@ pub enum MainPageContent {
     Authors,
     Settings,
 }
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct RefreshSignal;
+
+// everytime update RefreshSignal, should make it inequal
+impl PartialEq for RefreshSignal {
+    fn eq(&self, _: &Self) -> bool {
+        false
+    }
+}
+
 #[component]
 pub fn MainPage(user: User) -> impl IntoView {
     let (current_content, set_current_content) = create_signal(MainPageContent::Index);
