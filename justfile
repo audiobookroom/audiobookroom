@@ -6,6 +6,8 @@ up:
 fresh:
     touch audiobookroom.db
     sea-orm-cli migrate fresh
+pull:
+    git pull
 serve:
     cargo leptos serve --release
 deploy_db target_addr:
@@ -14,7 +16,7 @@ generate:
     sea-orm-cli generate entity -o src/entities --with-serde=both
 watch:
     cargo leptos watch
-deploy target_addr:
+deploy target_addr:pull
     cargo leptos build --release
     cargo build --release --bin add_book --bin add_user --bin modify_user
     rsync -au --progress ./target/release/audiobookroom ./target/site \

@@ -57,6 +57,13 @@ pub fn MainPage(user: User) -> impl IntoView {
                 prop.chapter_id = next_chapter_detail.id;
                 prop.init_time = 0.;
                 set_player_props(Some(prop));
+                // save the progress
+                let _ = crate::server_api::progress::set_progress(
+                    user.id,
+                    prop.book_id,
+                    prop.chapter_id,
+                    0.,
+                ).await;
                 refresh_signle.set(RefreshSignal);
             } else {
                 // end it
@@ -87,6 +94,13 @@ pub fn MainPage(user: User) -> impl IntoView {
                 prop.chapter_id = next_chapter_detail.id;
                 prop.init_time = 0.;
                 set_player_props(Some(prop));
+                // save the progress
+                let _ = crate::server_api::progress::set_progress(
+                    user.id,
+                    prop.book_id,
+                    prop.chapter_id,
+                    0.,
+                ).await;
                 refresh_signle.set(RefreshSignal);
             } else {
                 // end it
