@@ -2,7 +2,7 @@ use leptos::{html::Input, *};
 
 use crate::{
     server_api::{authors::AuthorDetail, book::BookDetail, User},
-    ui::player::AudioProps,
+    ui::{main_page::RefreshSignal, player::AudioProps},
 };
 #[derive(Clone, Debug, PartialEq)]
 pub enum BookPageContent {
@@ -196,8 +196,9 @@ fn BookDetail(
     use crate::server_api::progress::*;
     let user = use_context::<User>().unwrap();
     let _book_detail = book_detail.clone();
+    let refresh_signle = use_context::<RwSignal<RefreshSignal>>().unwrap();
     let current_progress = create_resource(
-        move || {},
+        move || refresh_signle.get(),
         move |_| {
             let _book_detail = _book_detail.clone();
             async move {

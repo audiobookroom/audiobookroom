@@ -7,9 +7,9 @@ pub fn MainIndex() -> impl IntoView {
     let user = use_context::<User>().unwrap();
     let set_player_prop =
         use_context::<WriteSignal<Option<crate::ui::player::AudioProps>>>().unwrap();
-
+    let refresh_signle: RwSignal<crate::ui::main_page::RefreshSignal> = use_context().unwrap();
     let current_progress = create_resource(
-        move || {},
+        move || refresh_signle.get(),
         move |_| async move {
             let mut current_p = crate::server_api::progress::get_progress_detail_by_user(user.id)
                 .await
@@ -31,6 +31,8 @@ pub fn MainIndex() -> impl IntoView {
                     chapter_id: k.chapter_id,
                     init_time: k.progress,
                 }));
+                // refresh the signle
+                refresh_signle.set(crate::ui::main_page::RefreshSignal);
             }
         });
     };

@@ -20,6 +20,8 @@ pub enum MainPageContent {
     Authors,
     Settings,
 }
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct RefreshSignal;
 #[component]
 pub fn MainPage(user: User) -> impl IntoView {
     let (current_content, set_current_content) = create_signal(MainPageContent::Index);
@@ -27,6 +29,8 @@ pub fn MainPage(user: User) -> impl IntoView {
 
     let (player_status, set_player_status) = create_signal("".to_string());
     let (player_props, set_player_props) = create_signal(None);
+    let refresh_signle: RwSignal<crate::ui::main_page::RefreshSignal> = use_context().unwrap();
+
     let player_on_previouse = move |mut prop: AudioProps| {
         spawn_local(async move {
             let chapter_detail = crate::server_api::book::get_chatper_detail(prop.chapter_id)
@@ -45,10 +49,12 @@ pub fn MainPage(user: User) -> impl IntoView {
                 prop.chapter_id = next_chapter_detail.id;
                 prop.init_time = 0.;
                 set_player_props(Some(prop));
+                refresh_signle.set(RefreshSignal);
             } else {
                 // end it
                 set_player_status("End".to_string());
                 set_player_props(None);
+                refresh_signle.set(RefreshSignal);
             }
         })
     };
@@ -73,6 +79,7 @@ pub fn MainPage(user: User) -> impl IntoView {
                 prop.chapter_id = next_chapter_detail.id;
                 prop.init_time = 0.;
                 set_player_props(Some(prop));
+                refresh_signle.set(RefreshSignal);
             } else {
                 // end it
                 set_player_status("End".to_string());
@@ -89,7 +96,8 @@ pub fn MainPage(user: User) -> impl IntoView {
     provide_context(set_player_props);
     // set current user
     provide_context(user.clone());
-
+    let refresh_signle = create_rw_signal(RefreshSignal);
+    provide_context(refresh_signle);
     view! {
         <div class="flex flex-col justify-between items-stretch h-full max-h-full p-2 lg:p-4  mx-auto overflow-hidden max-w-lg ">
             <div class="flex flex-col my-2">
