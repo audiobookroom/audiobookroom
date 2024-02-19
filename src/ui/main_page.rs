@@ -26,10 +26,10 @@ pub struct RefreshSignal;
 pub fn MainPage(user: User) -> impl IntoView {
     let (current_content, set_current_content) = create_signal(MainPageContent::Index);
     let (book_current_content, set_book_current_content) = create_signal(BookPageContent::Index);
+    let refresh_signle = create_rw_signal(RefreshSignal);
 
     let (player_status, set_player_status) = create_signal("".to_string());
     let (player_props, set_player_props) = create_signal(None);
-    let refresh_signle: RwSignal<crate::ui::main_page::RefreshSignal> = use_context().unwrap();
 
     let player_on_previouse = move |mut prop: AudioProps| {
         spawn_local(async move {
@@ -96,7 +96,6 @@ pub fn MainPage(user: User) -> impl IntoView {
     provide_context(set_player_props);
     // set current user
     provide_context(user.clone());
-    let refresh_signle = create_rw_signal(RefreshSignal);
     provide_context(refresh_signle);
     view! {
         <div class="flex flex-col justify-between items-stretch h-full max-h-full p-2 lg:p-4  mx-auto overflow-hidden max-w-lg ">
