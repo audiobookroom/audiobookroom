@@ -1,7 +1,7 @@
 [![](https://dcbadge.vercel.app/api/server/Rh7VgCtmFN)](https://discord.gg/Rh7VgCtmFN)
 # A simple and **_fast_** Self-host Audiobook server and player written fully in rust
 
-this is a simple hobby project built with leptos + axum + sea-orm + tailwind. It's simple but fast
+The frontend and backend are both written in ***RUST***! this is a simple hobby project built with leptos + axum + sea-orm + tailwind. It's simple but fast
 
 ## compare to [AudiobookShelf](https://github.com/advplyr/audiobookshelf)
 
@@ -10,7 +10,7 @@ this is a simple hobby project built with leptos + axum + sea-orm + tailwind. It
 
 ## features
 
-- record reading history and progress.
+- keep reading history and progress for each user.
 - user and password protected.
 - the server and client are very lightweight, you could run it on your very old PC.
 
