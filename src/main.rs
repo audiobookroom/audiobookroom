@@ -16,10 +16,10 @@ mod ssr {
         Router,
     };
     use axum_session::{SessionConfig, SessionLayer, SessionStore};
-    use axum_session_auth::{AuthConfig, AuthSessionLayer, SessionSqlitePool};
+    use axum_session_auth::{AuthConfig, AuthSessionLayer};
     use leptos::{get_configuration, logging::log, provide_context};
     use leptos_axum::{generate_route_list, handle_server_fns_with_context, LeptosRoutes};
-    use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
+    use sqlx::sqlite::SqlitePoolOptions;
     use tower::ServiceBuilder;
     use tower_http::services::ServeDir;
 

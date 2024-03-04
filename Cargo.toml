@@ -22,13 +22,13 @@ panic = "abort"
 [dependencies]
 # all
 # these denpendencies are used in both ssr and hydrate
-leptos = { git = "https://github.com/leptos-rs/leptos.git", rev = "ffcf3c2952240598ab9f019a75c77c9145965670", features = [
+leptos = { version = "0.6", features = [
     "nightly",
 ] }
-leptos_meta = { git = "https://github.com/leptos-rs/leptos.git", rev = "ffcf3c2952240598ab9f019a75c77c9145965670", features = [
+leptos_meta = { version = "0.6", features = [
     "nightly",
 ] }
-leptos_router = { git = "https://github.com/leptos-rs/leptos.git", rev = "ffcf3c2952240598ab9f019a75c77c9145965670", features = [
+leptos_router = { version = "0.6", features = [
     "nightly",
 ] }
 web-sys = { version = "0.3.68", features = [
@@ -57,7 +57,7 @@ anyhow = "1.0.79"
 
 # ssr
 # these dependencies are used in ssr
-leptos_axum = { git = "https://github.com/leptos-rs/leptos.git", rev = "ffcf3c2952240598ab9f019a75c77c9145965670", optional = true }
+leptos_axum = { version = "0.6", optional = true }
 rand = { version = "0.8", features = ["min_const_gen"], optional = true }
 axum = { version = "0.7", optional = true, features = ["macros"] }
 tower = { version = "0.4", optional = true }

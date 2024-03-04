@@ -2,7 +2,9 @@ use crate::server_api::{
     book::{get_book_detail, get_chatper_detail},
     User,
 };
+use chrono::{DateTime, Local};
 use leptos::{ev::MouseEvent, html::Audio, *};
+use tracing::info;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct AudioProps {
     pub chapter_id: i32,
@@ -17,9 +19,11 @@ pub fn Player(
     #[prop(into)] on_next: Callback<AudioProps, ()>,
 ) -> impl IntoView {
     // will not play if the props is not changed
+
     use crate::server_api::progress::*;
     let props = create_memo(move |_| props.get());
     let player_ref_node: NodeRef<Audio> = create_node_ref();
+    let (sleep_countdown, set_sleep_countdown) = create_signal::<Option<DateTime<Local>>>(None);
     let (last_saved_time, set_last_saved_time) = create_signal(None::<SetProgress>);
     let (_current_time, set_current_time) = create_signal(0.0);
 
@@ -58,8 +62,21 @@ pub fn Player(
     };
     let on_time_updated = move |_e| {
         // first set current time
-
+        // every 4 secs, check if the count down is meet
         let current_time = player_ref_node.get().unwrap().current_time();
+        let current_time_u32 = current_time as u32;
+        if current_time_u32 % 4 == 0 {
+            if let Some(sleep_time) = sleep_countdown.get() {
+                let current_time = Local::now();
+                if current_time >= sleep_time {
+                    info!("Sleep time reached, pausing the player");
+                    let player = player_ref_node.get().unwrap();
+                    player.pause().unwrap();
+                    return;
+                }
+            }
+        }
+
         set_current_time(current_time);
         let last_saved_time = last_saved_time.get();
         let props = props.get();
@@ -114,6 +131,15 @@ pub fn Player(
         let time = player.duration() * percent;
         player.set_current_time(time);
     };
+
+    let on_sleep_clicked = move |secs: u64| {
+        set_sleep_countdown(Some(
+            Local::now() + std::time::Duration::from_secs(secs as u64),
+        ));
+    };
+    let remove_sleep = move || {
+        set_sleep_countdown(None);
+    };
     view! {
         <div>
             <Transition fallback=move || {
@@ -148,7 +174,47 @@ pub fn Player(
                                         ></audio>
 
                                         <div class="w-full">
-                                            <div class="h-2 bg-red-light"></div>
+                                            <div class="flex flex-col w-full items-center">
+                                                <div class="border border-solid rounded-full font-bold text-gray-400">
+                                                    {move || {
+                                                        if let Some(sleep_time) = sleep_countdown.get() {
+                                                            let sleep_time = sleep_time.format("%H:%M:%S").to_string();
+                                                            Some(format!("will stop playing at {:?}", sleep_time))
+                                                        } else {
+                                                            None
+                                                        }
+                                                    }}
+
+                                                </div>
+                                                <div class="flex items-center justify-evenly flex-row w-full flex-wrap">
+
+                                                    <button
+                                                        class="bg-blue-50 hover:bg-green-50 font-bold py-2 px-4 border border-solid rounded"
+                                                        on:click=move |_| on_sleep_clicked(10 * 60)
+                                                    >
+                                                        10MIN
+                                                    </button>
+                                                    <button
+                                                        class="bg-blue-50 hover:bg-green-50 font-bold py-2 px-4 border border-solid rounded"
+                                                        on:click=move |_| on_sleep_clicked(20 * 60)
+                                                    >
+                                                        20MIN
+                                                    </button>
+                                                    <button
+                                                        class="bg-blue-50 hover:bg-green-50 font-bold py-2 px-4 border border-solid rounded"
+                                                        on:click=move |_| on_sleep_clicked(30 * 60)
+                                                    >
+                                                        30MIN
+                                                    </button>
+                                                    <button
+                                                        class="bg-blue-50 hover:bg-green-50 font-bold py-2 px-4 rounded"
+                                                        on:click=move |_| remove_sleep()
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+
                                             <div class="flex items-center justify-center bg-red-lightest">
                                                 <div
                                                     class="bg-white shadow-lg rounded-lg"
