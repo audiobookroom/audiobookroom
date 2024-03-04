@@ -72,6 +72,7 @@ pub fn Player(
                     info!("Sleep time reached, pausing the player");
                     let player = player_ref_node.get().unwrap();
                     player.pause().unwrap();
+                    set_sleep_countdown(None);
                     return;
                 }
             }
