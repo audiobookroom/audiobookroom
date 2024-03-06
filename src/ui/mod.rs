@@ -8,6 +8,9 @@ pub mod main_index;
 pub mod main_page;
 pub mod main_setting;
 pub mod player;
+pub mod login_page;
+
+
 pub type ServerAction<T, I> = leptos::Action<T, Result<I, ServerFnError>>;
 
 pub fn translate_time(time: i64) -> (u32, u32) {

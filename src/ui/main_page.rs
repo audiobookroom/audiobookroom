@@ -1,25 +1,11 @@
-use leptos::*;
+use leptos::{ *};
+use leptos_router::{Outlet, A};
 
 use crate::{
     server_api::{progress::SetProgress, User},
-    ui::{
-        main_authors::MainAuthors,
-        main_books::MainBooks,
-        main_index::MainIndex,
-        main_setting::MainSettings,
-        player::{AudioProps, Player},
-    },
+    ui::player::{AudioProps, Player},
 };
 
-use super::main_books::BookPageContent;
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum MainPageContent {
-    Index,
-    Books,
-    Authors,
-    Settings,
-}
 #[derive(Clone, Copy, Debug)]
 pub struct RefreshSignal;
 
@@ -32,8 +18,6 @@ impl PartialEq for RefreshSignal {
 
 #[component]
 pub fn MainPage(user: User) -> impl IntoView {
-    let (current_content, set_current_content) = create_signal(MainPageContent::Index);
-    let (book_current_content, set_book_current_content) = create_signal(BookPageContent::Index);
     let refresh_signle = create_rw_signal(RefreshSignal);
 
     let (player_status, set_player_status) = create_signal("".to_string());
@@ -63,7 +47,8 @@ pub fn MainPage(user: User) -> impl IntoView {
                     prop.book_id,
                     prop.chapter_id,
                     0.,
-                ).await;
+                )
+                .await;
                 refresh_signle.set(RefreshSignal);
             } else {
                 // end it
@@ -100,7 +85,8 @@ pub fn MainPage(user: User) -> impl IntoView {
                     prop.book_id,
                     prop.chapter_id,
                     0.,
-                ).await;
+                )
+                .await;
                 refresh_signle.set(RefreshSignal);
             } else {
                 // end it
@@ -126,59 +112,38 @@ pub fn MainPage(user: User) -> impl IntoView {
                     <span>{format!("Welcome {}", user.username)}</span>
 
                 </div>
+
                 <div class="flex justify-between items-center space-x-2">
-                    <button
+                    <A
                         class="flex-1 bg-gray-400 shadow-md hover:bg-gray-50 hover:shadow-lg"
-                        on:click=move |_| set_current_content(MainPageContent::Index)
+                        href="/"
                     >
                         "Index"
-                    </button>
-                    <button
+                    </A>
+                    <A
                         class="flex-1 bg-gray-400 shadow-md hover:bg-gray-50 hover:shadow-lg"
-                        on:click=move |_| {
-                            set_current_content(MainPageContent::Books);
-                            set_book_current_content(BookPageContent::Index);
-                        }
+                        href="/books"
                     >
 
                         "Books"
-                    </button>
-                    <button
+                    </A>
+                    <A
                         class="flex-1 bg-gray-400 shadow-md hover:bg-gray-50 hover:shadow-lg"
-                        on:click=move |_| set_current_content(MainPageContent::Authors)
+                        href="/authors"
                     >
                         "Authors"
-                    </button>
-                    <button
+                    </A>
+                    <A
                         class="flex-1 bg-gray-400 shadow-md hover:bg-gray-50 hover:shadow-lg"
-                        on:click=move |_| set_current_content(MainPageContent::Settings)
+                        href="/settings"
                     >
                         "Settings"
-                    </button>
+                    </A>
                 </div>
             </div>
             <div class="flex-1 overflow-auto flex flex-col items-center text-center">
 
-                {move || match current_content.get() {
-                    MainPageContent::Index => view! { <MainIndex/> },
-                    MainPageContent::Books => {
-                        view! {
-                            <MainBooks
-                                current_content=book_current_content
-                                set_current_content=set_book_current_content
-                            />
-                        }
-                    }
-                    MainPageContent::Authors => {
-                        view! {
-                            <MainAuthors
-                                set_main_content=set_current_content
-                                set_book_current_content=set_book_current_content
-                            />
-                        }
-                    }
-                    MainPageContent::Settings => view! { <MainSettings/> },
-                }}
+                <Outlet/>
 
             </div>
             <div>

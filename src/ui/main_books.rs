@@ -1,54 +1,20 @@
 use leptos::{html::Input, *};
+use leptos_router::{use_params, Route, A};
 
-use crate::{
-    server_api::{authors::AuthorDetail, book::BookDetail, User},
-    ui::{main_page::RefreshSignal, player::AudioProps},
-};
-#[derive(Clone, Debug, PartialEq)]
-pub enum BookPageContent {
-    Index,
-    BookDetail((BookDetail, AuthorDetail)),
-    ChapterDetail((i32, i32)),
-}
-#[component]
-pub fn MainBooks(
-    current_content: ReadSignal<BookPageContent>,
-    set_current_content: WriteSignal<BookPageContent>,
-) -> impl IntoView {
+use crate::{server_api::User, ui::player::AudioProps};
+
+#[component(transparent)]
+pub fn MainBooks() -> impl IntoView {
     view! {
-        {move || {
-            match current_content.get() {
-                BookPageContent::Index => {
-                    view! { <BookIndex set_current_content=set_current_content/> }.into_view()
-                }
-                BookPageContent::BookDetail((book_detail, author_detail)) => {
-                    view! {
-                        <BookDetail
-                            book_detail=book_detail
-                            author_detail=author_detail
-                            set_current_content=set_current_content
-                        />
-                    }
-                        .into_view()
-                }
-                BookPageContent::ChapterDetail((book_id, chapter_id)) => {
-                    view! {
-                        <ChapterView
-                            book_id=book_id
-                            chapter_id=chapter_id
-                            set_current_content=set_current_content
-                        />
-                    }
-                        .into_view()
-                }
-            }
-        }}
+        <Route path="" view=BookIndex/>
+        <Route path="book/:book_id" view=BookDetail/>
+        <Route path="book/:book_id/chapter/:chapter_id" view=ChapterView/>
     }
 }
 
 #[component]
 /// this will show all books
-fn BookIndex(#[prop(into)] set_current_content: Callback<BookPageContent, ()>) -> impl IntoView {
+pub fn BookIndex() -> impl IntoView {
     let (current_page, set_current_page) = create_signal(0u64);
     let (max_item, _set_max_item) = create_signal(100);
     let books = create_resource(
@@ -83,24 +49,15 @@ fn BookIndex(#[prop(into)] set_current_content: Callback<BookPageContent, ()>) -
                                                 .items
                                                 .into_iter()
                                                 .map(|(book, author)| {
-                                                    let book_to_send = book.clone();
-                                                    let author_to_send = author.clone();
                                                     view! {
-                                                        <button
+                                                        <A
                                                             class="p-1  bg-blue-50 shadow-sm flex-auto hover:shadow-lg hover:bg-green-50"
-                                                            on:click=move |_| {
-                                                                set_current_content(
-                                                                    BookPageContent::BookDetail((
-                                                                        book_to_send.clone(),
-                                                                        author_to_send.clone(),
-                                                                    )),
-                                                                );
-                                                            }
+                                                            href=format!("book/{}", book.id)
                                                         >
 
                                                             <h1>{&book.name}</h1>
                                                             <h2>{&author.name}</h2>
-                                                        </button>
+                                                        </A>
                                                     }
                                                 })
                                                 .collect::<Vec<_>>()}
@@ -175,46 +132,53 @@ fn BookIndex(#[prop(into)] set_current_content: Callback<BookPageContent, ()>) -
     }
 }
 #[component]
-fn BookDetail(
-    #[prop(into)] book_detail: BookDetail,
-    #[prop(into)] author_detail: AuthorDetail,
-    #[prop(into)] set_current_content: Callback<BookPageContent, ()>,
-) -> impl IntoView {
+pub fn BookDetail() -> impl IntoView {
+    use leptos_router::Params;
+    #[derive(Params, PartialEq, Clone)]
+    struct Para {
+        book_id: i32,
+    }
     use crate::server_api::book::*;
-
+    let params = use_params::<Para>();
     let set_player_props = use_context::<WriteSignal<Option<AudioProps>>>().unwrap();
     let (current_page, set_current_page) = create_signal(0u64);
     let page_node_ref: NodeRef<Input> = create_node_ref();
     let (max_item, _set_max_item) = create_signal(100);
-    let chapters = create_resource(
-        move || (current_page.get(), max_item.get()),
-        move |(current_page, max_item)| async move {
-            let chapters = get_chapters(book_detail.id, current_page, max_item).await;
-            chapters
+    let user = use_context::<User>().unwrap();
+    let book_author_chapters_detail = create_resource(
+        move || {
+            (
+                params.get().unwrap().book_id,
+                current_page.get(),
+                max_item.get(),
+            )
+        },
+        move |(book_id, current_page, max_item)| async move {
+            let book_detail = get_book_detail(book_id).await.unwrap();
+            let author_detail = crate::server_api::authors::get_author_by_id(book_detail.author_id)
+                .await
+                .unwrap()
+                .unwrap();
+            let chapters = get_chapters(book_detail.id, current_page, max_item)
+                .await
+                .unwrap();
+            let current_p = get_progress(book_detail.id, user.id).await.unwrap();
+
+            let progress = if let Some(p) = current_p {
+                let chapter_detail = crate::server_api::book::get_chatper_detail(p.chapter_id)
+                    .await
+                    .unwrap();
+                Some((p, chapter_detail))
+            } else {
+                None
+            };
+            (book_detail, author_detail, chapters, progress)
         },
     );
+
     use crate::server_api::progress::*;
     let user = use_context::<User>().unwrap();
-    let _book_detail = book_detail.clone();
-    let refresh_signle = use_context::<RwSignal<RefreshSignal>>().unwrap();
-    let current_progress = create_resource(
-        move || refresh_signle.get(),
-        move |_| {
-            let _book_detail = _book_detail.clone();
-            async move {
-                let current_p = get_progress(book_detail.id, user.id).await.unwrap();
 
-                if let Some(p) = current_p {
-                    let chapter_detail = crate::server_api::book::get_chatper_detail(p.chapter_id)
-                        .await
-                        .unwrap();
-                    return Some((p, _book_detail, chapter_detail));
-                } else {
-                    return None;
-                }
-            }
-        },
-    );
     let on_progress_button_click = move |account_id: i32, book_id: i32| {
         spawn_local(async move {
             let progress = crate::server_api::progress::get_progress(book_id, account_id).await;
@@ -229,48 +193,131 @@ fn BookDetail(
     };
     view! {
         <div class="flex flex-col items-center text-center w-full ">
-            <h1>{&book_detail.name}</h1>
-            <h2>{&author_detail.name}</h2>
+
             <Transition fallback=move || {
                 view! { <p>{"Loading..."}</p> }
             }>
                 <div class="flex-col flex items-center space-y-1 w-full">
 
                     {move || {
-                        current_progress
+                        book_author_chapters_detail
                             .get()
-                            .map(|current_p| {
-                                match current_p {
-                                    Some((progress_item, book, chapter)) => {
-                                        let init_time = progress_item.progress;
-                                        view! {
+                            .map(|(book, author, chapters, progress)| {
+                                let number_of_pages = chapters.number_of_pages;
+                                let current_page = chapters.page;
+                                view! {
+                                    <h1>{&book.name}</h1>
+                                    <h2>{&author.name}</h2>
+
+                                    {match progress {
+                                        Some((progress, chapter)) => {
+                                            let init_time = progress.progress;
+                                            view! {
+                                                <button
+                                                    class="w-full mx-2 px-2 py-1 bg-blue-50 hover:bg-green-50 border border-solid rounded-sm shadow-md hover:shadow-lg"
+                                                    on:click=move |_e| {
+                                                        on_progress_button_click(user.id, book.id);
+                                                    }
+                                                >
+
+                                                    <h2>{&book.name}</h2>
+
+                                                    {move || {
+                                                        let (min, sec) = crate::ui::translate_time(
+                                                            init_time as i64,
+                                                        );
+                                                        let formated_time = crate::ui::formate_time(min, sec);
+                                                        view! {
+                                                            <h3>{&chapter.chapter_name}</h3>
+
+                                                            <p>{format!("Current progress: {}", formated_time)}</p>
+                                                        }
+                                                            .into_view()
+                                                    }}
+
+                                                </button>
+                                            }
+                                                .into_view()
+                                        }
+                                        None => view! { <p>{"No Progress"}</p> }.into_view(),
+                                    }}
+
+                                    <div class="flex-col flex space-x-0 w-full my-1 py-1">
+
+                                        {chapters
+                                            .items
+                                            .into_iter()
+                                            .map(move |chapter| {
+                                                let chapter_detail = chapter.clone();
+                                                let chapter_name = chapter_detail.chapter_name;
+                                                view! {
+                                                    <A
+                                                        class="w-full  px-2 py-1 bg-blue-50 hover:bg-green-50 border border-solid rounded-sm shadow-md hover:shadow-lg"
+                                                        href=format!("chapter/{}", chapter.id)
+                                                    >
+
+                                                        {chapter_name}
+                                                    </A>
+                                                }
+                                            })
+                                            .collect::<Vec<_>>()}
+
+                                    </div>
+                                    <div class="flex flex-col w-full space-y-1">
+                                        <div class="flex flex-row items-center justify-between w-full space-x-2">
+                                            <input
+                                                ref=page_node_ref
+                                                class="flex-1 px-1"
+                                                value=current_page
+                                            />
+                                            <p>{format!("of [0 to {})", number_of_pages)}</p>
                                             <button
-                                                class="w-full mx-2 px-2 py-1 bg-blue-50 hover:bg-green-50 border border-solid rounded-sm shadow-md hover:shadow-lg"
-                                                on:click=move |_e| {
-                                                    on_progress_button_click(user.id, book.id);
+                                                on:click=move |_| {
+                                                    let page_num = page_node_ref
+                                                        .get()
+                                                        .unwrap()
+                                                        .value()
+                                                        .parse::<u64>()
+                                                        .unwrap();
+                                                    if page_num < number_of_pages {
+                                                        set_current_page(page_num);
+                                                    }
+                                                }
+
+                                                class="flex-1 px-2 bg-gray-400  shadow-md hover:bg-gray-50 hover:shadow-lg"
+                                            >
+                                                go
+                                            </button>
+                                        </div>
+                                        <div class="flex flex-row items-center justify-between w-full space-x-2">
+
+                                            <button
+                                                class="bg-gray-400 flex-1 shadow-md hover:bg-gray-50 hover:shadow-lg"
+                                                on:click=move |_| {
+                                                    if current_page >= 1 {
+                                                        set_current_page(current_page - 1);
+                                                    }
                                                 }
                                             >
 
-                                                <h2>{&book.name}</h2>
-
-                                                {move || {
-                                                    let (min, sec) = crate::ui::translate_time(
-                                                        init_time as i64,
-                                                    );
-                                                    let formated_time = crate::ui::formate_time(min, sec);
-                                                    view! {
-                                                        <h3>{&chapter.chapter_name}</h3>
-
-                                                        <p>{format!("Current progress: {}", formated_time)}</p>
-                                                    }
-                                                        .into_view()
-                                                }}
-
+                                                {format!("Prev")}
                                             </button>
-                                        }
-                                            .into_view()
-                                    }
-                                    None => view! { <p>{"No Progress"}</p> }.into_view(),
+
+                                            <button
+                                                class="bg-gray-400 flex-1 shadow-md hover:bg-gray-50 hover:shadow-lg"
+                                                on:click=move |_| {
+                                                    if number_of_pages > 0
+                                                        && current_page < (number_of_pages - 1)
+                                                    {
+                                                        set_current_page(current_page + 1);
+                                                    }
+                                                }
+                                            >
+
+                                                {format!("Next")}
+                                            </button>
+                                        </div>
+                                    </div>
                                 }
                             })
                     }}
@@ -278,128 +325,33 @@ fn BookDetail(
                 </div>
             </Transition>
 
-            <Transition fallback=move || {
-                view! { <p>{"Loading..."}</p> }
-            }>
-
-                {move || {
-                    let chapters = chapters.get();
-                    chapters
-                        .map(|chapters| {
-                            match chapters {
-                                Ok(chapters) => {
-                                    let number_of_pages = chapters.number_of_pages;
-                                    let current_page = chapters.page;
-                                    view! {
-                                        <div class="flex-col flex space-x-0 w-full my-1 py-1">
-
-                                            {chapters
-                                                .items
-                                                .into_iter()
-                                                .map(|chapter| {
-                                                    let chapter_detail = chapter.clone();
-                                                    let chapter_name = &chapter_detail.chapter_name;
-                                                    view! {
-                                                        <button
-                                                            class="w-full  px-2 py-1 bg-blue-50 hover:bg-green-50 border border-solid rounded-sm shadow-md hover:shadow-lg"
-                                                            on:click=move |_| {
-                                                                set_current_content(
-                                                                    BookPageContent::ChapterDetail((
-                                                                        book_detail.id,
-                                                                        chapter_detail.id,
-                                                                    )),
-                                                                );
-                                                            }
-                                                        >
-
-                                                            {chapter_name}
-                                                        </button>
-                                                    }
-                                                })
-                                                .collect::<Vec<_>>()}
-
-                                        </div>
-                                        <div class="flex flex-col w-full space-y-1">
-                                            <div class="flex flex-row items-center justify-between w-full space-x-2">
-                                                <input
-                                                    ref=page_node_ref
-                                                    class="flex-1 px-1"
-                                                    value=current_page
-                                                />
-                                                <p>{format!("of [0 to {})", number_of_pages)}</p>
-                                                <button
-                                                    on:click=move |_| {
-                                                        let page_num = page_node_ref
-                                                            .get()
-                                                            .unwrap()
-                                                            .value()
-                                                            .parse::<u64>()
-                                                            .unwrap();
-                                                        if page_num < number_of_pages {
-                                                            set_current_page(page_num);
-                                                        }
-                                                    }
-
-                                                    class="flex-1 px-2 bg-gray-400  shadow-md hover:bg-gray-50 hover:shadow-lg"
-                                                >
-                                                    go
-                                                </button>
-                                            </div>
-                                            <div class="flex flex-row items-center justify-between w-full space-x-2">
-
-                                                <button
-                                                    class="bg-gray-400 flex-1 shadow-md hover:bg-gray-50 hover:shadow-lg"
-                                                    on:click=move |_| {
-                                                        if current_page >= 1 {
-                                                            set_current_page(current_page - 1);
-                                                        }
-                                                    }
-                                                >
-
-                                                    {format!("Prev")}
-                                                </button>
-
-                                                <button
-                                                    class="bg-gray-400 flex-1 shadow-md hover:bg-gray-50 hover:shadow-lg"
-                                                    on:click=move |_| {
-                                                        if number_of_pages > 0
-                                                            && current_page < (number_of_pages - 1)
-                                                        {
-                                                            set_current_page(current_page + 1);
-                                                        }
-                                                    }
-                                                >
-
-                                                    {format!("Next")}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    }
-                                        .into_view()
-                                }
-                                Err(e) => view! { <p>{format!("Error: {:?}", e)}</p> }.into_view(),
-                            }
-                        })
-                }}
-
-            </Transition>
-
-            <button on:click=move |_| set_current_content(BookPageContent::Index)>{"Back"}</button>
+            <A
+                class="w-full p-2 shadow-sm bg-blue-50 hover:bg-green-50 hover:shadow-xl rounded-md border border-solid"
+                href="/books"
+            >
+                {"Back"}
+            </A>
         </div>
     }
 }
 
 #[component]
-pub fn ChapterView(
-    book_id: i32,
-    chapter_id: i32,
-    #[prop(into)] set_current_content: Callback<BookPageContent, ()>,
-) -> impl IntoView {
+pub fn ChapterView() -> impl IntoView {
+    use leptos_router::*;
+    #[derive(Params, PartialEq, Clone)]
+    struct Para {
+        book_id: i32,
+        chapter_id: i32,
+    }
+    let params = use_params::<Para>();
     let set_player_props = use_context::<WriteSignal<Option<AudioProps>>>().unwrap();
 
     let book_chapter_detail = create_resource(
-        || {},
-        move |_| async move {
+        move || {
+            let para = params.get().unwrap();
+            (para.book_id, para.chapter_id)
+        },
+        move |(book_id, chapter_id)| async move {
             let book_detail = crate::server_api::book::get_book_detail(book_id)
                 .await
                 .unwrap();
@@ -421,7 +373,7 @@ pub fn ChapterView(
                 {move || {
                     book_chapter_detail
                         .get()
-                        .map(|(book_detail, author_detail, chapter_detail)| {
+                        .map(|(book_detail, _author_detail, chapter_detail)| {
                             let book_name = book_detail.name.clone();
                             view! {
                                 <div class="flex flex-col items-stretch w-full space-y-2">
@@ -432,8 +384,8 @@ pub fn ChapterView(
                                         on:click=move |_| {
                                             set_player_props(
                                                 Some(AudioProps {
-                                                    book_id,
-                                                    chapter_id,
+                                                    book_id: book_detail.id,
+                                                    chapter_id: chapter_detail.id,
                                                     init_time: 0.,
                                                 }),
                                             );
@@ -452,20 +404,13 @@ pub fn ChapterView(
 
                                         Stop Play
                                     </button>
-                                    <button
+                                    <A
                                         class="w-full p-2 shadow-sm bg-blue-50 hover:bg-green-50 hover:shadow-xl rounded-md border border-solid"
-
-                                        on:click=move |_| {
-                                            let book_detail = book_detail.clone();
-                                            let author_detail = author_detail.clone();
-                                            set_current_content(
-                                                BookPageContent::BookDetail((book_detail, author_detail)),
-                                            );
-                                        }
+                                        href=format!("/books/book/{}", book_detail.id)
                                     >
 
                                         Back
-                                    </button>
+                                    </A>
                                 </div>
                             }
                         })
