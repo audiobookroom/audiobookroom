@@ -1,4 +1,5 @@
 use leptos::*;
+use sea_orm::PaginatorTrait;
 use serde::{Deserialize, Serialize};
 
 use super::authors::AuthorDetail;
@@ -93,16 +94,61 @@ pub async fn get_books_by_author(
 }
 
 #[server]
+pub async fn get_book_all_detail(
+    book_id: i32,
+    current_page: u64,
+    max_item: u64,
+) -> Result<
+    (
+        BookDetail,
+        crate::server_api::authors::AuthorDetail,
+        ChapterPage,
+        Option<(super::progress::ProgressResult, ChapterDetail)>,
+    ),
+    ServerFnError,
+> {
+    use super::ssr::*;
+    use crate::entities::*;
+    let db = db()?;
+    let user = crate::server_api::auth::get_user()
+        .await?
+        .ok_or(ServerFnError::new("Not logged in"))?;
+    let (book, author) = Music::find_by_id(book_id)
+        .find_also_related(author::Entity)
+        .one(&db)
+        .await?
+        .unwrap();
+    let pages = Chapter::find()
+        .filter(chapter::Column::MusicId.eq(book_id))
+        .paginate(&db, max_item);
+    let page = pages.fetch_page(current_page).await?;
+    let (progress, progress_chapter) = Progress::find_by_id((user.id, book_id))
+        .find_also_related(chapter::Entity)
+        .one(&db)
+        .await?
+        .unwrap();
+    Ok((
+        book.into(),
+        author.unwrap().into(),
+        ChapterPage {
+            page: current_page as u64,
+            max_item: max_item as u64,
+            number_of_items: pages.num_items().await?,
+            number_of_pages: pages.num_pages().await?,
+            items: page.into_iter().map(Into::into).collect(),
+        },
+        Some((progress.into(), progress_chapter.unwrap().into())),
+    ))
+}
+#[server]
 pub async fn get_book_detail(book_id: i32) -> Result<BookDetail, ServerFnError> {
     crate::server_api::auth::get_user()
         .await?
         .ok_or(ServerFnError::new("Not logged in"))?;
 
     use super::ssr::*;
-    use crate::entities::music;
     let db = db()?;
-    let book = Music::find()
-        .filter(music::Column::Id.eq(book_id))
+    let book = Music::find_by_id(book_id)
         .one(&db)
         .await?
         .ok_or(ServerFnError::new("Book not found"))?;
@@ -335,6 +381,26 @@ pub async fn search_chapter_by_chapter_num(
     })
 }
 
+#[server]
+pub async fn get_chapter_details(
+    chapter_id: i32,
+) -> Result<(BookDetail, AuthorDetail, ChapterDetail), ServerFnError> {
+    use super::ssr::*;
+    use crate::entities::*;
+
+    let db = db()?;
+    let _user = crate::server_api::auth::get_user()
+        .await?
+        .ok_or(ServerFnError::new("Not logged in"))?;
+    let (chapter, book) = Chapter::find_by_id(chapter_id)
+        .find_also_related(music::Entity)
+        .one(&db)
+        .await?
+        .unwrap();
+    let book = book.unwrap();
+    let author = book.find_related(Author).one(&db).await?.unwrap();
+    Ok((book.into(), author.into(), chapter.into()))
+}
 #[server]
 pub async fn get_chatper_detail(chapter_id: i32) -> Result<ChapterDetail, ServerFnError> {
     crate::server_api::auth::get_user()

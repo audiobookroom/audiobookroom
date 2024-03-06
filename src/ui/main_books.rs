@@ -144,7 +144,7 @@ pub fn BookDetail() -> impl IntoView {
     let (current_page, set_current_page) = create_signal(0u64);
     let page_node_ref: NodeRef<Input> = create_node_ref();
     let (max_item, _set_max_item) = create_signal(100);
-    let user = use_context::<User>().unwrap();
+    // let user = use_context::<User>().unwrap();
     let book_author_chapters_detail = create_resource(
         move || {
             (
@@ -154,29 +154,13 @@ pub fn BookDetail() -> impl IntoView {
             )
         },
         move |(book_id, current_page, max_item)| async move {
-            let book_detail = get_book_detail(book_id).await.unwrap();
-            let author_detail = crate::server_api::authors::get_author_by_id(book_detail.author_id)
+            get_book_all_detail(book_id, current_page, max_item)
                 .await
                 .unwrap()
-                .unwrap();
-            let chapters = get_chapters(book_detail.id, current_page, max_item)
-                .await
-                .unwrap();
-            let current_p = get_progress(book_detail.id, user.id).await.unwrap();
-
-            let progress = if let Some(p) = current_p {
-                let chapter_detail = crate::server_api::book::get_chatper_detail(p.chapter_id)
-                    .await
-                    .unwrap();
-                Some((p, chapter_detail))
-            } else {
-                None
-            };
-            (book_detail, author_detail, chapters, progress)
         },
     );
 
-    use crate::server_api::progress::*;
+    // use crate::server_api::progress::*;
     let user = use_context::<User>().unwrap();
 
     let on_progress_button_click = move |account_id: i32, book_id: i32| {
@@ -351,18 +335,10 @@ pub fn ChapterView() -> impl IntoView {
             let para = params.get().unwrap();
             (para.book_id, para.chapter_id)
         },
-        move |(book_id, chapter_id)| async move {
-            let book_detail = crate::server_api::book::get_book_detail(book_id)
-                .await
-                .unwrap();
-            let author_detail = crate::server_api::authors::get_author_by_id(book_detail.author_id)
+        move |(_book_id, chapter_id)| async move {
+            crate::server_api::book::get_chapter_details(chapter_id)
                 .await
                 .unwrap()
-                .unwrap();
-            let chapter_detail = crate::server_api::book::get_chatper_detail(chapter_id)
-                .await
-                .unwrap();
-            (book_detail, author_detail, chapter_detail)
         },
     );
     view! {
