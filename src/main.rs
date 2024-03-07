@@ -19,7 +19,11 @@ mod ssr {
     use axum_session_auth::{AuthConfig, AuthSessionLayer};
     use leptos::{get_configuration, logging::log, provide_context};
     use leptos_axum::{generate_route_list, handle_server_fns_with_context, LeptosRoutes};
-    use sqlx::sqlite::SqlitePoolOptions;
+    #[cfg(feature = "mysql")]
+    use sqlx::mysql::MySqlPoolOptions as PoolOptions;
+    #[cfg(feature = "sqlite")]
+    use sqlx::sqlite::SqlitePoolOptions as PoolOptions;
+
     use tower::ServiceBuilder;
     use tower_http::services::ServeDir;
 
@@ -63,17 +67,21 @@ mod ssr {
 
         // 1. setup the database
         let db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        let pool = SqlitePoolOptions::new()
+        tracing::info!("db_url: {}", db_url);
+        let pool = PoolOptions::new()
             .connect(&db_url)
             .await
             .expect("Could not make pool.");
-        let db = sea_orm::SqlxSqliteConnector::from_sqlx_sqlite_pool(pool.clone());
+        #[cfg(feature = "sqlite")]
+        let db = SqlxConnector::from_sqlx_sqlite_pool(pool.clone());
+        #[cfg(feature = "mysql")]
+        let db = SqlxConnector::from_sqlx_mysql_pool(pool.clone());
 
         // 2. Auth section
         let session_config = SessionConfig::default().with_table_name("axum_sessions");
         let auth_config = AuthConfig::<i32>::default();
         let session_store =
-            SessionStore::<SessionSqlitePool>::new(Some(pool.clone().into()), session_config)
+            SessionStore::<SessionPool>::new(Some(pool.clone().into()), session_config)
                 .await
                 .unwrap();
 
@@ -121,10 +129,8 @@ mod ssr {
             .nest_service("/fetchbook", fetch_book_service)
             .fallback(file_and_error_handler)
             .layer(
-                AuthSessionLayer::<User, i32, SessionSqlitePool, SqlitePool>::new(Some(
-                    pool.clone(),
-                ))
-                .with_config(auth_config),
+                AuthSessionLayer::<User, i32, SessionPool, SqlxPool>::new(Some(pool.clone()))
+                    .with_config(auth_config),
             ) // authlayer is required for AuthSession
             .layer(SessionLayer::new(session_store)) // sessionlayer is required for AuthSessionLayer
             .with_state(app_state);

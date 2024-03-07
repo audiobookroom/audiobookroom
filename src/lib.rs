@@ -4,6 +4,15 @@ pub mod errors;
 pub mod server_api;
 pub mod ui;
 
+#[cfg(feature = "sqlite")]
+pub type ProgressTimeType = f32;
+#[cfg(feature = "mysql")]
+pub type ProgressTimeType = f64;
+
+#[cfg(feature = "sqlite")]
+pub type ProgressDateType = String;
+#[cfg(feature = "mysql")]
+pub type ProgressDateType = chrono::DateTime<chrono::Utc>;
 #[cfg(feature = "ssr")]
 pub mod entities;
 #[cfg(feature = "ssr")]
@@ -20,10 +29,10 @@ pub mod tools;
 #[wasm_bindgen::prelude::wasm_bindgen]
 pub fn hydrate() {
     use tracing_subscriber::fmt::format::Pretty;
+    use tracing_subscriber::fmt::time::UtcTime;
     use tracing_subscriber::prelude::*;
     use tracing_web::{performance_layer, MakeWebConsoleWriter};
     use ui::app::App;
-    use tracing_subscriber::fmt::time::UtcTime;
     let fmt_layer = tracing_subscriber::fmt::layer()
         .with_ansi(false) // Only partially supported across browsers
         .with_timer(UtcTime::rfc_3339())

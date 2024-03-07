@@ -5,3 +5,6 @@ fetchbook
 *.db
 node_modules
 test_entity
+.env
+justfile
+src/entities

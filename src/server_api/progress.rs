@@ -1,6 +1,8 @@
 use leptos::*;
 use serde::{Deserialize, Serialize};
 
+use crate::ProgressDateType;
+
 use super::book::{BookDetail, ChapterDetail};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -9,7 +11,8 @@ pub struct ProgressResult {
     pub music_id: i32,
     pub chapter_id: i32,
     pub progress: f64,
-    pub update: String,
+
+    pub update: ProgressDateType,
 }
 
 #[cfg(feature = "ssr")]
@@ -33,9 +36,8 @@ pub async fn get_progress_detail_by_user(
         .await?
         .ok_or(ServerFnError::new("Not logged in"))?;
 
-    use crate::entities::prelude::*;
-    use crate::entities::*;
     use super::ssr::*;
+    use crate::entities::*;
     use sea_orm::prelude::*;
     let db = db()?;
 
@@ -68,9 +70,8 @@ pub async fn get_progress_by_user(account_id: i32) -> Result<Vec<ProgressResult>
         .await?
         .ok_or(ServerFnError::new("Not logged in"))?;
 
-    use crate::entities::prelude::*;
-    use crate::entities::*;
     use super::ssr::*;
+    use crate::entities::*;
     let db = db()?;
 
     let p = Progress::find()
@@ -91,7 +92,6 @@ pub async fn get_progress(
         .await?
         .ok_or(ServerFnError::new("Not logged in"))?;
 
-    use crate::entities::prelude::*;
     use super::ssr::*;
     let db = db()?;
 
@@ -115,9 +115,8 @@ pub async fn set_progress(
         .await?
         .ok_or(ServerFnError::new("Not logged in"))?;
 
-    use crate::entities::prelude::*;
-    use crate::entities::*;
     use super::ssr::*;
+    use crate::entities::*;
     let db = db()?;
     let auth = auth()?;
     let current_user = auth.current_user;
@@ -135,18 +134,20 @@ pub async fn set_progress(
         p.chapter_id = sea_orm::ActiveValue::set(chapter_id);
         p.progress = sea_orm::ActiveValue::set(progress);
         let now = chrono::Utc::now();
-        let now_str = now.to_rfc3339();
-        p.update = sea_orm::ActiveValue::set(now_str);
+        #[cfg(feature = "sqlite")]
+        let now = now.to_rfc3339();
+        p.update = sea_orm::ActiveValue::set(now);
         p.save(&db).await?;
     } else {
         let now = chrono::Utc::now();
-        let now_str = now.to_rfc3339();
+        #[cfg(feature = "sqlite")]
+        let now = now.to_rfc3339();
         Progress::insert(progress::ActiveModel {
             account_id: sea_orm::ActiveValue::set(account_id),
             music_id: sea_orm::ActiveValue::set(music_id),
             chapter_id: sea_orm::ActiveValue::set(chapter_id),
             progress: sea_orm::ActiveValue::set(progress),
-            update: sea_orm::ActiveValue::set(now_str),
+            update: sea_orm::ActiveValue::set(now),
         })
         .exec(&db)
         .await?;

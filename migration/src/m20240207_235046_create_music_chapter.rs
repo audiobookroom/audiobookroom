@@ -12,7 +12,6 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(Chapter::Table)
-                    .if_not_exists()
                     .col(
                         ColumnDef::new(Chapter::Id)
                             .integer()

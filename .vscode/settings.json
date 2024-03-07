@@ -1,5 +1,5 @@
 {
-    "rust-analyzer.cargo.features": ["ssr"],
+    "rust-analyzer.cargo.features": ["ssr","mysql"],
     "rust-analyzer.cargo.noDefaultFeatures": true,
   "customLocalFormatters.formatters": [
     {

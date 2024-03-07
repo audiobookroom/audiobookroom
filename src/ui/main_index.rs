@@ -14,11 +14,7 @@ pub fn MainIndex() -> impl IntoView {
             let mut current_p = crate::server_api::progress::get_progress_detail_by_user(user.id)
                 .await
                 .unwrap();
-            current_p.sort_unstable_by(|a, b| {
-                let a_update = chrono::DateTime::parse_from_rfc3339(&a.0.update).unwrap();
-                let b_update = chrono::DateTime::parse_from_rfc3339(&b.0.update).unwrap();
-                b_update.cmp(&a_update)
-            });
+            current_p.sort_unstable_by(|a, b| b.0.update.cmp(&a.0.update));
             current_p
         },
     );
@@ -61,10 +57,7 @@ pub fn MainIndex() -> impl IntoView {
                                             let init_time = progress_item.progress;
                                             let chapter_name = chapter.chapter_name.clone();
                                             let (min, sec) = super::translate_time(init_time as i64);
-                                            let last_update = chrono::DateTime::parse_from_rfc3339(
-                                                    &progress_item.update,
-                                                )
-                                                .unwrap();
+                                            let last_update = progress_item.update;
                                             let local_update = last_update
                                                 .with_timezone(&chrono::Local);
                                             let local_str = local_update

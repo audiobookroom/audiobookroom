@@ -1,5 +1,4 @@
 use leptos::*;
-use sea_orm::PaginatorTrait;
 use serde::{Deserialize, Serialize};
 
 use super::authors::AuthorDetail;
@@ -93,7 +92,7 @@ pub async fn get_books_by_author(
     })
 }
 
-#[server]
+#[server(GetBookAllDetail,"/api","GetJson")]
 pub async fn get_book_all_detail(
     book_id: i32,
     current_page: u64,
@@ -118,15 +117,16 @@ pub async fn get_book_all_detail(
         .one(&db)
         .await?
         .unwrap();
+    use sea_orm::PaginatorTrait;
+
     let pages = Chapter::find()
         .filter(chapter::Column::MusicId.eq(book_id))
         .paginate(&db, max_item);
     let page = pages.fetch_page(current_page).await?;
-    let (progress, progress_chapter) = Progress::find_by_id((user.id, book_id))
+    let progres = Progress::find_by_id((user.id, book_id))
         .find_also_related(chapter::Entity)
         .one(&db)
-        .await?
-        .unwrap();
+        .await?;
     Ok((
         book.into(),
         author.unwrap().into(),
@@ -137,7 +137,7 @@ pub async fn get_book_all_detail(
             number_of_pages: pages.num_pages().await?,
             items: page.into_iter().map(Into::into).collect(),
         },
-        Some((progress.into(), progress_chapter.unwrap().into())),
+        progres.map(|(p, c)| (p.into(), c.unwrap().into())),
     ))
 }
 #[server]
@@ -308,7 +308,7 @@ impl From<crate::entities::chapter::Model> for ChapterDetail {
     }
 }
 
-#[server]
+#[server(GetChapters,"/api","GetJson")]
 pub async fn get_chapters(
     music_id: i32,
     page_num: u64,
