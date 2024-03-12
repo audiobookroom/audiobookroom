@@ -2,25 +2,31 @@ version: '2.1'
 services:
   app:
     container_name: audiobookroom
-    image: 'audiobookroom:latest'
+    image: 'jiangqiu/audiobookroom:1.0'
     volumes:
+      #!! don't delete this, you can chage ./fetchbook. in container: /app/fetchbook is the data directory which stores the book files
       - ./fetchbook:/app/fetchbook
+      #!! mount the book library where you store the downloaded books. in container, use /test_book/some_book, to add book
       - ./test_book:/test_book
     environment:
       - PUID=1000
       - PGID=1000
     ports:
-      - '3001:3000'
+      - '3000:3000'
     depends_on:
       - db
   db:
     image: 'mariadb:latest'
     container_name: mysql
+    volumes:
+      #!! the directory to store the database, don't delete this
+      - ./db:/var/lib/mysql:Z
     environment:
+      # !!!don't change these settings!!!, because currently it's hardcoded in the app
       - MARIADB_USER=audiobookroom
       - MARIADB_PASSWORD=audiobookroom
       - MARIADB_ROOT_PASSWORD=audiobookroom
-
+  # delete this as you like
   adminer:
     image: adminer
     restart: always

@@ -14,6 +14,50 @@ The frontend and backend are both written in ***RUST***! this is a simple hobby 
 - user and password protected.
 - the server and client are very lightweight, you could run it on your very old PC.
 
+## quick start
+1. create dir for store the data:`mkdir ./fetchbook`,`mkdir ./db`
+2. prepare your download dir: in this example, it's `./(path_to_you_data)`
+3. the docker-compose.yml file:
+```yml
+version: '2.1'
+services:
+  app:
+    container_name: audiobookroom
+    image: 'jiangqiu/audiobookroom:1.0'
+    volumes:
+      #!! don't delete this, you can chage ./fetchbook. in container: /app/fetchbook is the data directory which stores the book files
+      - ./fetchbook:/app/fetchbook
+      #!! mount the book library where you store the downloaded books. in container, use /test_book/some_book, to add book
+      - ./(path_to_you_data):/test_book
+    environment:
+      - PUID=1000
+      - PGID=1000
+    ports:
+      - '3000:3000'
+    depends_on:
+      - db
+  db:
+    image: 'mariadb:latest'
+    container_name: mysql
+    volumes:
+      #!! the directory to store the database, don't delete this
+      - ./db:/var/lib/mysql:Z
+    environment:
+      # !!!don't change these settings!!!, because currently it's hardcoded in the app
+      - MARIADB_USER=audiobookroom
+      - MARIADB_PASSWORD=audiobookroom
+      - MARIADB_ROOT_PASSWORD=audiobookroom
+  # delete this as you like
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8081:8080
+
+
+```
+4. now login into [localhost:3000](http://localhost:3000), setup the user and password. the signup page are only valid at the first install.
+5. go to setting, add a book. if your book is located at `./(path_to_you_data)/mybook`, set the path as `/test_book/mybook`
 ## install and serve
 
 1. clone this repo
@@ -37,11 +81,14 @@ The frontend and backend are both written in ***RUST***! this is a simple hobby 
 
 - login
   ![login](/markdown/login.png)
-- player
-  ![player](/markdown/player.png)
+- index
+  ![index](/markdown/index.png)
+- books
+  ![player](/markdown/books.png)
 - addbook
   ![addbook](/markdown/addbook.png)
-
+- settings
+  ![settings](/markdown/settings.png)
 
 ## todo
 - there are a lot of things unfinished...
