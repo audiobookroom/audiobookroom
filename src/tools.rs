@@ -2,13 +2,13 @@ use std::path::{Path, PathBuf};
 
 use crate::entities::{prelude::*, *};
 use sea_orm::{ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, Set};
-use tracing::{debug, info};
+use tracing::{debug, error, info};
 pub async fn arrange_new_folder(
     src_dir: impl AsRef<Path>,
     book_dir: impl AsRef<Path>,
     author: &str,
     book_name: &str,
-) -> (Vec<PathBuf>, Vec<PathBuf>) {
+) -> eyre::Result<(Vec<PathBuf>, Vec<PathBuf>)> {
     // book_dir : /fetchbook
     // src_dir /my_book_download
     // patrial_target_dir: author/book_name
@@ -20,7 +20,7 @@ pub async fn arrange_new_folder(
     let target_dir = book_dir.join(&patrial_target_dir);
     debug!("moving {:?} target_dir: {:?}", src_dir.as_ref(), target_dir);
 
-    let files = get_files_in_dir(src_dir);
+    let files = get_files_in_dir(src_dir)?;
     // create target dir if not exists
     std::fs::create_dir_all(&target_dir).unwrap();
 
@@ -43,11 +43,16 @@ pub async fn arrange_new_folder(
     for (src, target) in files.iter().zip(target_file_paths) {
         // create a hard link from src to target_dir, with new filename target_index+src.ext
         info!("moving {:?} to {:?}", src, target);
-        tokio::fs::hard_link(src, target).await.unwrap();
+        let result = tokio::fs::hard_link(src, &target).await;
+        if let Err(e) = result {
+            error!("error hardlink file:{:?}, try copy instead", e);
+            tokio::fs::copy(src, &target).await.unwrap();
+            
+        }
     }
     info!("files from src to {:?}", files);
     info!("files to {:?}", partial_target_file_names);
-    (files, partial_target_file_names)
+    Ok((files, partial_target_file_names))
 }
 fn sort_with_number(paths: Vec<PathBuf>) -> Vec<PathBuf> {
     let fist_numer_reg = regex::Regex::new(r"\d+").unwrap();
@@ -68,8 +73,8 @@ fn sort_with_number(paths: Vec<PathBuf>) -> Vec<PathBuf> {
     out.sort_by_key(|(num, _)| *num);
     out.into_iter().map(|(_, file)| file).collect()
 }
-fn get_files_in_dir(dir: impl AsRef<Path>) -> Vec<PathBuf> {
-    let files_and_dirs = std::fs::read_dir(dir).unwrap();
+fn get_files_in_dir(dir: impl AsRef<Path>) -> eyre::Result<Vec<PathBuf>> {
+    let files_and_dirs = std::fs::read_dir(dir)?;
     let entries: Vec<_> = files_and_dirs.into_iter().map(|e| e.unwrap()).collect();
     let mut files = vec![];
     let mut dirs = vec![];
@@ -85,9 +90,9 @@ fn get_files_in_dir(dir: impl AsRef<Path>) -> Vec<PathBuf> {
     let mut out = vec![];
     out.extend(files_sorted);
     for dir in dirs_sorted {
-        out.extend(get_files_in_dir(&dir));
+        out.extend(get_files_in_dir(&dir)?);
     }
-    out
+    Ok(out)
 }
 
 pub async fn create_new_book(
@@ -103,7 +108,7 @@ pub async fn create_new_book(
     // let target_dir = format!("{:?}/{}/{}", book_dir, author_name, new_book_name);
     // let target_dir = book_dir.join(&author_name).join(&new_book_name);
     let (srcs, targets) =
-        arrange_new_folder(source_dir, book_dir, &author_name, &new_book_name).await;
+        arrange_new_folder(source_dir, book_dir, &author_name, &new_book_name).await?;
     // create the book in db
     // first create the author
     let current_author = Author::find()

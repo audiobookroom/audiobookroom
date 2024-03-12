@@ -1,0 +1,29 @@
+version: '2.1'
+services:
+  app:
+    container_name: audiobookroom
+    image: 'audiobookroom:latest'
+    volumes:
+      - ./fetchbook:/app/fetchbook
+      - ./test_book:/test_book
+    environment:
+      - PUID=1000
+      - PGID=1000
+    ports:
+      - '3001:3000'
+    depends_on:
+      - db
+  db:
+    image: 'mariadb:latest'
+    container_name: mysql
+    environment:
+      - MARIADB_USER=audiobookroom
+      - MARIADB_PASSWORD=audiobookroom
+      - MARIADB_ROOT_PASSWORD=audiobookroom
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8081:8080
+
