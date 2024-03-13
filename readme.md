@@ -23,7 +23,7 @@ version: '2.1'
 services:
   app:
     container_name: audiobookroom
-    image: 'jiangqiu/audiobookroom:1.0'
+    image: 'jiangqiu/audiobookroom:1.1'
     volumes:
       #!! don't delete this, you can chage ./fetchbook. in container: /app/fetchbook is the data directory which stores the book files
       - ./fetchbook:/app/fetchbook
